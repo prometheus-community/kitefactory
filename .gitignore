@@ -1,0 +1,5 @@
+/packer_cache
+
+# packer seems to delete /build/.gitignore
+/build/*
+!/build/
