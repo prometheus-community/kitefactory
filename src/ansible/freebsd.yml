@@ -1,0 +1,4 @@
+- hosts: default
+  roles:
+    - freebsd
+    - common

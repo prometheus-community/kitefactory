@@ -1,0 +1,32 @@
+- group:
+        name: peon
+        state: present
+
+- user:
+        name: peon
+        group: peon
+        comment: "Peon Worker"
+        shell: "{{ bash_prefix }}/bin/bash"
+
+- file:
+        path: /home/peon/bin
+        state: directory
+        owner: peon
+        group: peon
+        mode: 0755
+
+- file:
+        path: /home/peon/go
+        state: directory
+        owner: peon
+        group: peon
+        mode: 0755
+
+- lineinfile:
+        dest: /home/peon/.bashrc
+        create: yes
+        owner: peon
+        group: peon
+        mode: 664
+        regexp: '^export GOPATH='
+        line: 'export GOPATH="$HOME/go"'

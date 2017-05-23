@@ -1,0 +1,5 @@
+---
+
+- name: Update to latest patch level
+  shell: echo freebsd-update fetch && echo freebsd-update install
+
