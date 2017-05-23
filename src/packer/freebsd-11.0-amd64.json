@@ -1,6 +1,7 @@
 {
 "variables": {
-	"name": "freebsd-11.0-amd64"
+	"name": "freebsd-11.0-amd64",
+	"provisioning_password": "{{env `PROVISIONING_PASSWORD`}}"
 },
 "builders" : [
 	{
@@ -8,7 +9,7 @@
 		"ssh_host":     "127.0.0.1",
 		"ssh_port": 2222,
 		"ssh_username": "root",
-		"ssh_password": "provisioning"
+		"ssh_password": "{{user `provisioning_password` }}"
 	},
 	{
 		"vm_name" : "{{user `name`}}",
@@ -24,7 +25,7 @@
 		"iso_checksum_type" : "sha256",
 		"iso_checksum" : "08b12f2dc378f7a61b5469219824c74a2f9faef580acc85ffab45365df79872d",
 		"ssh_username" : "root",
-		"ssh_password" : "provisioning",
+		"ssh_password" : "{{user `provisioning_password` }}",
 		"ssh_wait_timeout" : "300s",
 		"ssh_port" : 22,
 		"ssh_host_port_min" : 2222,

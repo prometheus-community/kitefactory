@@ -6,7 +6,7 @@ export ZFSBOOT_POOL_CREATE_OPTIONS='-O compress=lz4 -O atime=off -O checksum=fle
 export DISTRIBUTIONS='base.txz kernel.txz lib32.txz'
 
 #!/bin/sh
-echo "22b7acce9d3c4bec297dcefa64ec55430580fdc4028c72a9e63719476c78cb2e" | pw usermod root -h 0
+echo "PROVISIONING_PASSWORD" | pw usermod root -h 0
 mkdir /root/pkgs
 
 sysrc ifconfig_vtnet0=dhcp
