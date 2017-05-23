@@ -23,10 +23,10 @@ clean-isos:
 	rm -f vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso
 	rm -f vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso.xz
 
-build/freebsd-11.0-amd64/freebsd-11.0-amd64: src/packer/freebsd-11.0-amd64.json src/packer/http/freebsd-11.0-amd64/installerconfig vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso
+build/freebsd-11.0-amd64/freebsd-11.0-amd64: src/packer/freebsd-11.0-amd64.json .secret src/packer/http/freebsd-11.0-amd64/installerconfig vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso
 	PACKER_LOG=1 PACKER_KEY_INTERVAL=10ms packer build -on-error=ask -only=qemu src/packer/freebsd-11.0-amd64.json
 
-src/packer/http/freebsd-11.0-amd64/installerconfig: src/packer/http/freebsd-11.0-amd64/installerconfig.tpl
+src/packer/http/freebsd-11.0-amd64/installerconfig: .secret src/packer/http/freebsd-11.0-amd64/installerconfig.tpl
 	test -n "${PROVISIONING_PASSWORD}"
 	sed "s/PROVISIONING_PASSWORD/${PROVISIONING_PASSWORD}/" src/packer/http/freebsd-11.0-amd64/installerconfig.tpl > src/packer/http/freebsd-11.0-amd64/installerconfig
 
