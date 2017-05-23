@@ -4,6 +4,13 @@
 },
 "builders" : [
 	{
+		"type":         "null",
+		"ssh_host":     "127.0.0.1",
+		"ssh_port": 2222,
+		"ssh_username": "root",
+		"ssh_password": "provisioning"
+	},
+	{
 		"vm_name" : "{{user `name`}}",
 		"type" : "qemu",
 		"accelerator" : "kvm",
@@ -18,7 +25,7 @@
 		"iso_checksum" : "08b12f2dc378f7a61b5469219824c74a2f9faef580acc85ffab45365df79872d",
 		"ssh_username" : "root",
 		"ssh_password" : "provisioning",
-		"ssh_wait_timeout" : "3000s",
+		"ssh_wait_timeout" : "300s",
 		"ssh_port" : 22,
 		"ssh_host_port_min" : 2222,
 		"ssh_host_port_max" : 2229,
@@ -26,37 +33,17 @@
 		"http_port_max" : 10089,
 		"http_port_min" : 10082,
 		"boot_wait" : "6s",
-		"boot_command" : [
-			"<enter>",
-			"<wait20s>s<wait>",
-			"mdconfig -s 8m -u md2", "<enter>",
-			"newfs /dev/md2", "<enter>",
-			"mount /dev/md2 /mnt", "<enter>",
-			"(cd /etc; tar cvpf - .) | tar xvpf - -C /mnt", "<enter>",
-			"umount /mnt", "<enter>",
-			"mount /dev/md2 /etc", "<enter>",
-			"cat <leftShiftOn>,,<leftShiftOff>EOF <leftShiftOn>.<leftShiftOff> /etc/installerconfig", "<enter>",
-			"export nonInteractive=yes", "<enter>",
-			"export ZFSBOOT_POOL_NAME=z", "<enter>",
-			"export ZFSBOOT_VDEV_TYPE=stripe", "<enter>",
-			"export ZFSBOOT_DISKS=vtbd0", "<enter>",
-			"export ZFSBOOT_POOL_CREATE_OPTIONS='-O compress=lz4 -O atime=off -O checksum=fletcher4'", "<enter>",
-			"export DISTRIBUTIONS='base.txz kernel.txz lib32.txz'", "<enter>",
-			"<enter>",
-			"#!/bin/sh", "<enter>",
-			"echo provisioning | pw usermod root -h 0", "<enter>",
-			"echo 'PermitRootLogin yes' <leftShiftOn>.<leftShiftOff> /etc/ssh/sshd_config", "<enter>",
-			"sysrc ifconfig_vtnet0=dhcp", "<enter>",
-			"sysrc sshd_enable=yes", "<enter>",
-			"<enter>",
-			"EOF","<enter>",
-			"exit","<enter>",
-			"<wait80s>",
-			"<enter>",
-			"root","<enter>",
-			"<enter>",
-			"shutdown -r now", "<enter>",
-			"<wait15s>","<enter>"
+		"boot_command": [
+			"<esc><wait>",
+			"boot -s<wait>",
+			"<enter><wait>",
+			"<wait10><wait10>",
+			"/bin/sh<enter><wait>",
+			"mdmfs -s 100m md1 /tmp<enter><wait>",
+			"mdmfs -s 100m md2 /mnt<enter><wait>",
+			"dhclient -l /tmp/dhclient.lease.vtnet0 vtnet0<enter><wait>",
+			"fetch -o /tmp/installerconfig http://{{ .HTTPIP }}:{{ .HTTPPort }}/installerconfig && bsdinstall script /tmp/installerconfig<enter><wait>",
+			"<wait80s>"
 		],
 		"shutdown_command": "shutdown -p now"
 	}
@@ -64,23 +51,23 @@
 "provisioners": [
 	{
 		"type": "file",
-		"source": "vendor/packages/freebsd-11.0-amd64/",
-		"destination": "/tmp/freebsd-11.0-amd64"
+		"source": "vendor/packages/{{user `name`}}/",
+		"destination": "/root/pkgs/"
 	},
 	{
 		"type": "shell",
 		"execute_command": "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}",
 		"environment_vars": [ "ASSUME_ALWAYS_YES=yes" ],
 		"inline": [
-			"cd /tmp/freebsd-11.0-amd64",
-			"pkg add -f pkg-*",
-			"pkg add -f *"
+			"cd /root/pkgs/",
+			"pkg add -f pkg.txz",
+			"pkg add -f *.txz"
 		]
 	},
 	{
 		"type": "ansible",
 		"playbook_file": "src/ansible/freebsd.yml",
-		"extra_arguments": [ "-vvvv" ]
+		"groups": "freebsd"
 	}
 ]
 }

@@ -1,7 +1,14 @@
 freebsd-11.0-amd64: build/freebsd-11.0-amd64/freebsd-11.0-amd64
 
+freebsd-11.0-amd64-run: build/freebsd-11.0-amd64/freebsd-11.0-amd64
+	#qemu-system-x86_64 -drive file=build/freebsd-11.0-amd64/freebsd-11.0-amd64,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,hostfwd=tcp::2228-:22 -boot once=d -m 512M -machine type=pc,accel=kvm -device virtio-net,netdev=user.0 -name freebsd-11.0-amd64 -display sdl -vnc 127.0.0.1:71
+	qemu-system-x86_64 -drive file=build/freebsd-11.0-amd64/freebsd-11.0-amd64,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev tap,id=user.0,ifname=tap0 -boot once=d -m 512M -machine type=pc,accel=kvm -device virtio-net,netdev=user.0 -name freebsd-11.0-amd64 -display sdl -vnc 127.0.0.1:71
+
 clean:
 	rm -rf build build/freebsd-11.0-amd64
+
+clean-pkgs:
+	rm -rf vendor/packages/freebsd-11.0-amd64
 
 clean-isos:
 	rm -f vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64
@@ -9,7 +16,17 @@ clean-isos:
 	rm -f vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso.xz
 
 build/freebsd-11.0-amd64/freebsd-11.0-amd64: src/packer/freebsd-11.0-amd64.json vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso
-	packer build src/packer/freebsd-11.0-amd64.json
+	PACKER_LOG=1 PACKER_KEY_INTERVAL=10ms packer build -on-error=ask -only=qemu src/packer/freebsd-11.0-amd64.json
+
+vendor/packages/freebsd-11.0-amd64: Makefile
+	mkdir -p vendor/packages/freebsd-11.0-amd64
+	for pkg in pkg.txz pkg.txz.sig; do \
+		[ -f "vendor/packages/freebsd-11.0-amd64/$$pkg" ] || curl -o "vendor/packages/freebsd-11.0-amd64/$$pkg" "http://pkg.freebsd.org/FreeBSD:11:amd64/quarterly/Latest/$$pkg"; \
+	done
+	for pkg in gettext-runtime-0.19.8.1_1.txz indexinfo-0.2.6.txz libffi-3.2.1.txz readline-6.3.8.txz python27-2.7.13_3.txz bash-4.4.12_2.txz gmake-4.2.1_1.txz go-1.8_1,1.txz; do \
+		[ -f "vendor/packages/freebsd-11.0-amd64/$$pkg" ] || curl -o "vendor/packages/freebsd-11.0-amd64/$$pkg" "http://pkg.freebsd.org/FreeBSD:11:amd64/quarterly/All/$$pkg"; \
+		xz -t "vendor/packages/freebsd-11.0-amd64/$$pkg"; \
+	done
 
 vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64:
 	curl -o vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64 -OJL "https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/11.0/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64"
