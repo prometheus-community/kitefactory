@@ -19,7 +19,7 @@
 		"disk_size" : 10240,
 		"disk_interface" : "virtio",
 		"net_device" : "virtio-net",
-		"headless" : false,
+		"headless" : true,
 		"output_directory" : "build/{{user `name`}}",
 		"iso_url" : "vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso",
 		"iso_checksum_type" : "sha256",
