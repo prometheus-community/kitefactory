@@ -4,12 +4,12 @@ freebsd-11.0-amd64-run:
 	#qemu-system-x86_64 -drive file=build/freebsd-11.0-amd64/freebsd-11.0-amd64,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,hostfwd=tcp::2228-:22 -boot once=d -m 512M -machine type=pc,accel=kvm -device virtio-net,netdev=user.0 -name freebsd-11.0-amd64 -display sdl -vnc 127.0.0.1:71
 	qemu-system-x86_64 \
 		-drive file=build/freebsd-11.0-amd64/freebsd-11.0-amd64,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
-		-netdev tap,id=user.0,ifname=tap0 \
+		-netdev tap,id=user.0 \
 		-device virtio-net,netdev=user.0 \
-		-boot once=d -m 512M \
+		-boot once=d -m 2048M \
 		-machine type=pc,accel=kvm \
 		-name freebsd-11.0-amd64 \
-		-display sdl \
+		-nographic \
 		-vnc 127.0.0.1:71
 
 clean:
