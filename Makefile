@@ -35,7 +35,7 @@ vendor/packages/freebsd-11.0-amd64: Makefile
 	for pkg in pkg.txz pkg.txz.sig; do \
 		[ -f "vendor/packages/freebsd-11.0-amd64/$$pkg" ] || curl -o "vendor/packages/freebsd-11.0-amd64/$$pkg" "http://pkg.freebsd.org/FreeBSD:11:amd64/quarterly/Latest/$$pkg"; \
 	done
-	for pkg in gettext-runtime-0.19.8.1_1.txz indexinfo-0.2.6.txz libffi-3.2.1.txz readline-6.3.8.txz python27-2.7.13_3.txz bash-4.4.12_2.txz gmake-4.2.1_1.txz go-1.8_1,1.txz; do \
+	for pkg in gettext-runtime-0.19.8.1_1.txz indexinfo-0.2.6.txz libffi-3.2.1.txz readline-6.3.8.txz python27-2.7.13_3.txz; do \
 		[ -f "vendor/packages/freebsd-11.0-amd64/$$pkg" ] || curl -o "vendor/packages/freebsd-11.0-amd64/$$pkg" "http://pkg.freebsd.org/FreeBSD:11:amd64/quarterly/All/$$pkg"; \
 		xz -t "vendor/packages/freebsd-11.0-amd64/$$pkg"; \
 	done

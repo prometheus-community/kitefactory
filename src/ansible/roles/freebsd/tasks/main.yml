@@ -1,5 +1,20 @@
 ---
 
 - name: Update to latest patch level
-  shell: echo freebsd-update fetch && echo freebsd-update install
+  shell: freebsd-update fetch --not-running-from-cron && freebsd-update install
+
+- name: Install required packages
+  shell: pkg install -y go gmake git-lite bash curl tmux
+
+- lineinfile:
+    dest: /etc/fstab
+    create: yes
+    owner: root
+    group: wheel
+    mode: 664
+    regexp: '^fdesc'
+    line: 'fdesc /dev/fd fdescfs rw 0 0'
+
+- name: Mount filesystems
+  shell: mount /dev/fd
 
