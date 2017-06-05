@@ -1,0 +1,9 @@
+# make sudo -u X -i start a *really* fresh shell, sudoers(5)
+Defaults        use_loginclass
+
+# we want RCS to keep our real user name, even if we sudo ci
+Defaults>root   !set_logname
+
+# by default root does not need a password
+root ALL=(ALL) NOPASSWD: ALL
+

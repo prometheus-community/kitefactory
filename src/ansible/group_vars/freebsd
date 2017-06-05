@@ -1,6 +1,7 @@
 local_prefix: /usr/local
 bash_prefix: /usr/local
 awk_prefix: /usr
+sudoersd_path: /usr/local/etc/sudoers.d
 
 ansible_python_interpreter: "/usr/local/bin/python2.7"
 

@@ -2,3 +2,4 @@
   roles:
     - freebsd
     - common
+    - buildkite

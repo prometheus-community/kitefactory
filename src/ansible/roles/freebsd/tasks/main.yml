@@ -4,8 +4,9 @@
   shell: freebsd-update fetch --not-running-from-cron && freebsd-update install
 
 - name: Install required packages
-  shell: pkg install -y go gmake git-lite bash curl tmux
+  shell: pkg install -y go gmake git-lite bash curl tmux sudo
 
+# configure bash
 - lineinfile:
     dest: /etc/fstab
     create: yes
@@ -15,6 +16,14 @@
     regexp: '^fdesc'
     line: 'fdesc /dev/fd fdescfs rw 0 0'
 
-- name: Mount filesystems
+- name: Mount fdesc filesystem
   shell: mount /dev/fd
 
+# configure sudo
+- name: Configure sudo
+  copy:
+    src: sudoers.d/default
+    dest: "{{ sudoersd_path }}"
+    owner: root
+    group: wheel
+    mode: 644
