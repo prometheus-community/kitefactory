@@ -69,7 +69,8 @@
 		"type": "ansible",
 		"playbook_file": "src/ansible/freebsd.yml",
 		"groups": "freebsd",
-		"extra_arguments": [ "-vvv" ]
+		"extra_arguments": [ "-vvv" ],
+		"ansible_env_vars": [ "PACKER_TEMPLATE={{user `name`}}" ]
 	}
 ]
 }

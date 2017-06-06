@@ -6,6 +6,19 @@
 - name: Install required packages
   shell: pkg install -y go gmake git-lite bash curl tmux sudo
 
+- name: Set hostname [1/2] - hostname
+  shell: "hostname {{ lookup('env','PACKER_TEMPLATE') }}.build.prometheus.io"
+
+- name: Set hostname [2/2] - /etc/rc.conf
+- lineinfile:
+    dest: /etc/rc.conf
+    create: yes
+    owner: root
+    group: wheel
+    mode: 664
+    regexp: '^hostname'
+    line: "hostname=\"{{ lookup('env','PACKER_TEMPLATE') }}.build.prometheus.io\""
+
 # configure bash
 - lineinfile:
     dest: /etc/fstab
