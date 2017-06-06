@@ -2,7 +2,7 @@
 
 - name: Symlink bash to /bin/bash for compatibility
   file:
-    src: "{{ bash_prefix }}"
+    src: "{{ bash_prefix }}/bin/bash"
     dest: "/bin/bash"
     owner: root
     group: wheel
