@@ -6,17 +6,36 @@ Depends on the following being available on the path:
 
 - curl
 - xz
-- packer
-- ansible
+- Packer
+- Ansible
 
 ## Provisioning (e.g. Image Generator) Stack
 
-Packer (with QEMU+Virtualbox)
+### src/packer
 
-Ansible
+Bootstrap VM creation (with QEMU) + provisioning with Ansible.
 
-# Using
+### src/ansible
+
+Provision target VM for running Buildkite agent as unprivileged user.
+
+## Using
+
+You will need to set the following environment variables before building:
+
+- `PROVISIONING_PASSWORD` - password for the root account in the new VM
+- `BUILDKITE_TOKEN` - token given by Buildkite to configure the agent with
+
+It is suggested to store them in `secrets/$machine-type` as shell variables,
+and then sourcing them.  This will allow the Makefile to detect changes and do
+the right thing.
 
 Run `make machine-type` where machine-type is in:
 
 - freebsd-11.0-amd64
+
+# Running
+
+Take a look at the `$machine-type-run` target in the Makefile.  This makes
+assumptions about the state of the VM host providing DHCP and routing of some
+type.
