@@ -12,7 +12,7 @@
 		"ssh_password": "{{user `provisioning_password` }}"
 	},
 	{
-		"vm_name" : "{{user `name`}}",
+		"vm_name" : "{{user `name`}}.qcow2",
 		"type" : "qemu",
 		"accelerator" : "kvm",
 		"format" : "qcow2",
