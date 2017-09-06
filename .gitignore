@@ -1,9 +1,5 @@
 /packer_cache
 
-# Where secrets get stored
-/secrets
-/src/packer/http/freebsd-11.0-amd64/installerconfig
-
 # packer seems to delete /build/.gitignore
 /build/*
 !/build/

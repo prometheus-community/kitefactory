@@ -13,7 +13,7 @@ freebsd-11.0-amd64-run:
 		-vnc 127.0.0.1:71
 
 clean:
-	rm -rf build build/freebsd-11.0-amd64
+	rm -rf build/freebsd-11.0-amd64
 
 clean-pkgs:
 	rm -rf vendor/packages/freebsd-11.0-amd64
@@ -23,12 +23,18 @@ clean-isos:
 	rm -f vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso
 	rm -f vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso.xz
 
-build/freebsd-11.0-amd64/freebsd-11.0-amd64.qcow2: src/packer/freebsd-11.0-amd64.json src/packer/http/freebsd-11.0-amd64/installerconfig vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso vendor/packages/freebsd-11.0-amd64
+build/freebsd-11.0-amd64/freebsd-11.0-amd64.qcow2: src/packer/freebsd-11.0-amd64.json secrets/freebsd-11.0-amd64/http/installerconfig vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso vendor/packages/freebsd-11.0-amd64
 	PACKER_LOG=1 PACKER_KEY_INTERVAL=10ms packer build -on-error=ask -only=qemu src/packer/freebsd-11.0-amd64.json
 
-src/packer/http/freebsd-11.0-amd64/installerconfig: secrets/freebsd-11.0-amd64 src/packer/http/freebsd-11.0-amd64/installerconfig.tpl
+secrets/freebsd-11.0-amd64:
+	mkdir ${.TARGET}
+
+secrets/freebsd-11.0-amd64/http:
+	mkdir ${.TARGET}
+
+secrets/http/freebsd-11.0-amd64/installerconfig: secrets/freebsd-11.0-amd64/env src/packer/http/freebsd-11.0-amd64/installerconfig.tpl secrets/freebsd-11.0-amd64/http
 	test -n "${PROVISIONING_PASSWORD}"
-	sed "s/PROVISIONING_PASSWORD/${PROVISIONING_PASSWORD}/" src/packer/http/freebsd-11.0-amd64/installerconfig.tpl > src/packer/http/freebsd-11.0-amd64/installerconfig
+	sed "s/PROVISIONING_PASSWORD/${PROVISIONING_PASSWORD}/" src/packer/http/freebsd-11.0-amd64/installerconfig.tpl > secrets/freebsd-11.0-amd64/http/installerconfig
 
 vendor/packages/freebsd-11.0-amd64: Makefile
 	mkdir -p vendor/packages/freebsd-11.0-amd64
