@@ -1,82 +1,74 @@
-freebsd-11.0-amd64: build/freebsd-11.0-amd64/freebsd-11.0-amd64.qcow2
+.POSIX:
+.SUFFIXES:
 
-freebsd-11.0-amd64-run:
-	#qemu-system-x86_64 -drive file=build/freebsd-11.0-amd64/freebsd-11.0-amd64,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,hostfwd=tcp::2228-:22 -boot once=d -m 512M -machine type=pc,accel=kvm -device virtio-net,netdev=user.0 -name freebsd-11.0-amd64 -display sdl -vnc 127.0.0.1:71
+.PHONY: freebsd-11.0-amd64
+freebsd-11.0-amd64:
+	$(MAKE) OS=freebsd ISO_OS=FreeBSD VER=11.0 ARCH=amd64 image
+
+.PHONY: image
+image: build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2
+
+.PHONY: ${OS}-${VER}-${ARCH}-run
+${OS}-${VER}-${ARCH}-run:
+	#qemu-system-x86_64 -drive file=build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH},if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,hostfwd=tcp::2228-:22 -boot once=d -m 512M -machine type=pc,accel=kvm -device virtio-net,netdev=user.0 -name ${OS}-${VER}-${ARCH} -display sdl -vnc 127.0.0.1:71
 	qemu-system-x86_64 \
-		-drive file=build/freebsd-11.0-amd64/freebsd-11.0-amd64.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
+		-drive file=build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
 		-netdev tap,id=user.0 \
 		-device virtio-net,netdev=user.0 \
 		-boot once=d -m 2048M \
 		-machine type=pc,accel=kvm \
-		-name freebsd-11.0-amd64 \
+		-name ${OS}-${VER}-${ARCH} \
 		-nographic \
 		-vnc 127.0.0.1:71
 
+.PHONY: clean
 clean:
-	rm -rf build/freebsd-11.0-amd64
+	rm -rf build/*
 
+.PHONY: clean-pkgs
 clean-pkgs:
-	rm -rf vendor/packages/freebsd-11.0-amd64
+	rm -rf vendor/packages/*
 
+.PHONY: clean-isos
 clean-isos:
-	rm -f vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64
-	rm -f vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso
-	rm -f vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso.xz
+	rm -f vendor/images/*
 
-build/freebsd-11.0-amd64/freebsd-11.0-amd64.qcow2: src/packer/freebsd-11.0-amd64.json secrets/freebsd-11.0-amd64/http/installerconfig vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso vendor/packages/freebsd-11.0-amd64
-	PACKER_LOG=1 PACKER_KEY_INTERVAL=10ms packer build -on-error=ask -only=qemu src/packer/freebsd-11.0-amd64.json
+build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}-${ARCH}.json secrets/${OS}-${VER}-${ARCH}/http/installerconfig vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso vendor/packages/${OS}-${VER}-${ARCH}
+	PACKER_LOG=1 PACKER_KEY_INTERVAL=10ms packer build -on-error=ask -only=qemu -var-file=src/packer/${OS}-${VER}-${ARCH}.json src/packer/${OS}.json
 
-secrets/freebsd-11.0-amd64:
+secrets/${OS}-${VER}-${ARCH}:
 	mkdir ${.TARGET}
 
-secrets/freebsd-11.0-amd64/http:
+secrets/${OS}-${VER}-${ARCH}/http:
 	mkdir ${.TARGET}
 
-secrets/http/freebsd-11.0-amd64/installerconfig: secrets/freebsd-11.0-amd64/env src/packer/http/freebsd-11.0-amd64/installerconfig.tpl secrets/freebsd-11.0-amd64/http
+secrets/http/${OS}-${VER}-${ARCH}/installerconfig: secrets/${OS}-${VER}-${ARCH}/env src/packer/http/${OS}-${VER}-${ARCH}/installerconfig.tpl secrets/${OS}-${VER}-${ARCH}/http
 	test -n "${PROVISIONING_PASSWORD}"
-	sed "s/PROVISIONING_PASSWORD/${PROVISIONING_PASSWORD}/" src/packer/http/freebsd-11.0-amd64/installerconfig.tpl > secrets/freebsd-11.0-amd64/http/installerconfig
+	sed "s/PROVISIONING_PASSWORD/${PROVISIONING_PASSWORD}/" src/packer/http/${OS}-${VER}-${ARCH}/installerconfig.tpl > secrets/${OS}-${VER}-${ARCH}/http/installerconfig
 
-vendor/packages/freebsd-11.0-amd64: Makefile
-	mkdir -p vendor/packages/freebsd-11.0-amd64
+vendor/packages/${OS}-${VER}-${ARCH}: Makefile
+	mkdir -p vendor/packages/${OS}-${VER}-${ARCH}
 	for pkg in pkg.txz pkg.txz.sig; do \
-		[ -f "vendor/packages/freebsd-11.0-amd64/$$pkg" ] || curl -o "vendor/packages/freebsd-11.0-amd64/$$pkg" "http://pkg.freebsd.org/FreeBSD:11:amd64/quarterly/Latest/$$pkg"; \
+		[ -f "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" ] || curl -o "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" "http://pkg.${OS}.org/${ISO_OS}:11:${ARCH}/quarterly/Latest/$$pkg"; \
 	done
 	for pkg in gettext-runtime-0.19.8.1_1.txz indexinfo-0.2.6.txz libffi-3.2.1.txz readline-6.3.8.txz python27-2.7.13_3.txz; do \
-		[ -f "vendor/packages/freebsd-11.0-amd64/$$pkg" ] || curl -o "vendor/packages/freebsd-11.0-amd64/$$pkg" "http://pkg.freebsd.org/FreeBSD:11:amd64/quarterly/All/$$pkg"; \
-		xz -t "vendor/packages/freebsd-11.0-amd64/$$pkg"; \
+		[ -f "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" ] || curl -o "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" "http://pkg.${OS}.org/${ISO_OS}:11:${ARCH}/quarterly/All/$$pkg"; \
+		xz -t "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg"; \
 	done
 
-vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64:
-	curl -o vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64 -OJL "https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/11.0/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64"
+vendor/images/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}:
+	curl -o vendor/images/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH} -OJL "https://download.${OS}.org/ftp/releases/${ARCH}/${ARCH}/ISO-IMAGES/${VER}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}"
 
-vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso: vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso.xz vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64
-	xz -d --stdout vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso.xz > vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso
+vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso: vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz vendor/images/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}
+	xz -d --stdout vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz > vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso
 	( \
 		cd vendor/images; \
-		grep "FreeBSD-11.0-RELEASE-amd64-disc1.iso)" CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64 | sha256sum -c - ; \
+		grep "${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso)" CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH} | sha256sum -c - ; \
 	)
 
-vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso.xz: vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64
-	curl -o vendor/images/FreeBSD-11.0-RELEASE-amd64-disc1.iso.xz -OJL "https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/11.0/FreeBSD-11.0-RELEASE-amd64-disc1.iso.xz"
+vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz: vendor/images/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}
+	curl -o vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz -OJL "https://download.${OS}.org/ftp/releases/${ARCH}/${ARCH}/ISO-IMAGES/${VER}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz"
 	( \
 		cd vendor/images; \
-		grep "FreeBSD-11.0-RELEASE-amd64-disc1.iso.xz)" CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-amd64 | sha256sum -c - ; \
+		grep "${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz)" CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH} | sha256sum -c - ; \
 	)
-
-vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-i386:
-	curl -o vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-i386 -OJL "https://download.freebsd.org/ftp/releases/i386/i386/ISO-IMAGES/11.0/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-i386"
-
-vendor/images/FreeBSD-11.0-RELEASE-i386-disc1.iso: vendor/images/FreeBSD-11.0-RELEASE-i386-disc1.iso.xz vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-i386
-	xz -d --stdout vendor/images/FreeBSD-11.0-RELEASE-i386-disc1.iso.xz > vendor/images/FreeBSD-11.0-RELEASE-i386-disc1.iso
-	( \
-		cd vendor/images; \
-		grep "FreeBSD-11.0-RELEASE-i386-disc1.iso)" CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-i386 | sha256sum -c - ; \
-	)
-
-vendor/images/FreeBSD-11.0-RELEASE-i386-disc1.iso.xz: vendor/images/CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-i386
-	curl -o vendor/images/FreeBSD-11.0-RELEASE-i386-disc1.iso.xz -OJL "https://download.freebsd.org/ftp/releases/i386/i386/ISO-IMAGES/11.0/FreeBSD-11.0-RELEASE-i386-disc1.iso.xz"
-	( \
-		cd vendor/images; \
-		grep "FreeBSD-11.0-RELEASE-i386-disc1.iso.xz)" CHECKSUM.SHA256-FreeBSD-11.0-RELEASE-i386 | sha256sum -c - ; \
-	)
-

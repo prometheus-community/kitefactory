@@ -1,0 +1,75 @@
+{
+"variables": {
+	"provisioning_password": "{{env `PROVISIONING_PASSWORD`}}"
+},
+"builders" : [
+	{
+		"type":         "null",
+		"ssh_host":     "127.0.0.1",
+		"ssh_port": 2222,
+		"ssh_username": "root",
+		"ssh_password": "{{user `provisioning_password` }}"
+	},
+	{
+		"vm_name" : "{{user `name`}}.qcow2",
+		"type" : "qemu",
+		"accelerator" : "kvm",
+		"format" : "qcow2",
+		"disk_size" : 10240,
+		"disk_interface" : "virtio",
+		"net_device" : "virtio-net",
+		"headless" : true,
+		"output_directory" : "build/{{user `name`}}",
+		"iso_url" : "vendor/images/FreeBSD-{{user `release_number`}}-RELEASE-{{user `release_arch`}}-disc1.iso",
+		"iso_checksum_type" : "sha256",
+		"iso_checksum" : "{{user `iso_checksum`}}",
+		"ssh_username" : "root",
+		"ssh_password" : "{{user `provisioning_password` }}",
+		"ssh_wait_timeout" : "300s",
+		"ssh_port" : 22,
+		"ssh_host_port_min" : 2222,
+		"ssh_host_port_max" : 2229,
+		"http_directory" : "secrets/{{user `name`}}/http",
+		"http_port_max" : 10089,
+		"http_port_min" : 10082,
+		"boot_wait" : "6s",
+		"boot_command": [
+			"<esc><wait>",
+			"boot -s<wait>",
+			"<enter><wait>",
+			"<wait10><wait10>",
+			"/bin/sh<enter><wait>",
+			"mdmfs -s 100m md1 /tmp<enter><wait>",
+			"mdmfs -s 100m md2 /mnt<enter><wait>",
+			"dhclient -l /tmp/dhclient.lease.vtnet0 vtnet0<enter><wait>",
+			"fetch -o /tmp/installerconfig http://{{ .HTTPIP }}:{{ .HTTPPort }}/installerconfig && bsdinstall script /tmp/installerconfig<enter><wait>",
+			"<wait80s>"
+		],
+		"shutdown_command": "shutdown -p now"
+	}
+],
+"provisioners": [
+	{
+		"type": "file",
+		"source": "vendor/packages/{{user `name`}}/",
+		"destination": "/root/pkgs/"
+	},
+	{
+		"type": "shell",
+		"execute_command": "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}",
+		"environment_vars": [ "ASSUME_ALWAYS_YES=yes" ],
+		"inline": [
+			"cd /root/pkgs/",
+			"pkg add -f pkg.txz",
+			"pkg add -f python*"
+		]
+	},
+	{
+		"type": "ansible",
+		"playbook_file": "src/ansible/freebsd.yml",
+		"groups": "freebsd",
+		"extra_arguments": [ "-vvv" ],
+		"ansible_env_vars": [ "PACKER_TEMPLATE={{user `name`}}" ]
+	}
+]
+}
