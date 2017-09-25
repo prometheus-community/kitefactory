@@ -1,0 +1,6 @@
+{
+	"release_number": "11.1",
+	"release_arch": "amd64",
+	"name": "freebsd-11.1-amd64",
+	"iso_checksum" : "ff4c749ea0aaaceedb2432ba3e0fd0c1b64f5a72141b1ec06b9ced52b5de0dbf"
+}

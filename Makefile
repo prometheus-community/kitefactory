@@ -1,9 +1,32 @@
 .POSIX:
 .SUFFIXES:
 
-.PHONY: freebsd-11.0-amd64
+.PHONY: freebsd-11.1-amd64
+freebsd-11.1-amd64:
+	$(MAKE) \
+		OS=freebsd \
+		ISO_OS=FreeBSD VER=11.1 \
+		ARCH=amd64 \
+		PKGS="gettext-runtime-0.19.8.1_1.txz indexinfo-0.2.6.txz libffi-3.2.1.txz readline-7.0.3.txz python27-2.7.13_7.txz" \
+		image
+
+.PHONY: freebsd-11.1-i386
+freebsd-11.1-i386:
+	$(MAKE) \
+		OS=freebsd \
+		ISO_OS=FreeBSD VER=11.1 \
+		ARCH=i386 \
+		PKGS="gettext-runtime-0.19.8.1_1.txz indexinfo-0.2.6.txz libffi-3.2.1.txz readline-7.0.3.txz python27-2.7.13_7.txz" \
+		image
+
+.PHONY: freebsd-11.0-i386
 freebsd-11.0-amd64:
-	$(MAKE) OS=freebsd ISO_OS=FreeBSD VER=11.0 ARCH=amd64 image
+	$(MAKE) \
+		OS=freebsd \
+		ISO_OS=FreeBSD VER=11.0 \
+		ARCH=amd64 \
+		PKGS="gettext-runtime-0.19.8.1_1.txz indexinfo-0.2.6.txz libffi-3.2.1.txz readline-6.3.8.txz python27-2.7.13_3.txz" \
+		image
 
 .PHONY: image
 image: build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2
@@ -37,12 +60,13 @@ build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}-$
 	PACKER_LOG=1 PACKER_KEY_INTERVAL=10ms packer build -on-error=ask -only=qemu -var-file=src/packer/${OS}-${VER}-${ARCH}.json src/packer/${OS}.json
 
 secrets/${OS}-${VER}-${ARCH}:
-	mkdir ${.TARGET}
+	mkdir $@
 
-secrets/${OS}-${VER}-${ARCH}/http:
-	mkdir ${.TARGET}
+secrets/${OS}-${VER}-${ARCH}/http: secrets/${OS}-${VER}-${ARCH}
+	echo mkdir $@
+	mkdir $@
 
-secrets/http/${OS}-${VER}-${ARCH}/installerconfig: secrets/${OS}-${VER}-${ARCH}/env src/packer/http/${OS}-${VER}-${ARCH}/installerconfig.tpl secrets/${OS}-${VER}-${ARCH}/http
+secrets/${OS}-${VER}-${ARCH}/http/installerconfig: secrets/${OS}-${VER}-${ARCH}/env src/packer/http/${OS}-${VER}-${ARCH}/installerconfig.tpl secrets/${OS}-${VER}-${ARCH}/http
 	test -n "${PROVISIONING_PASSWORD}"
 	sed "s/PROVISIONING_PASSWORD/${PROVISIONING_PASSWORD}/" src/packer/http/${OS}-${VER}-${ARCH}/installerconfig.tpl > secrets/${OS}-${VER}-${ARCH}/http/installerconfig
 
@@ -51,7 +75,7 @@ vendor/packages/${OS}-${VER}-${ARCH}: Makefile
 	for pkg in pkg.txz pkg.txz.sig; do \
 		[ -f "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" ] || curl -o "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" "http://pkg.${OS}.org/${ISO_OS}:11:${ARCH}/quarterly/Latest/$$pkg"; \
 	done
-	for pkg in gettext-runtime-0.19.8.1_1.txz indexinfo-0.2.6.txz libffi-3.2.1.txz readline-6.3.8.txz python27-2.7.13_3.txz; do \
+	for pkg in ${PKGS}; do \
 		[ -f "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" ] || curl -o "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" "http://pkg.${OS}.org/${ISO_OS}:11:${ARCH}/quarterly/All/$$pkg"; \
 		xz -t "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg"; \
 	done
