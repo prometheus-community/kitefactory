@@ -1,28 +1,33 @@
-- group:
+- name: Add peon group
+  group:
     name: peon
     state: present
 
-- user:
+- name: Add peon user
+  user:
     name: peon
     group: peon
     comment: "Peon Worker"
     shell: "{{ bash_prefix }}/bin/bash"
 
-- file:
+- name: "peon: add ~/bin"
+  file:
     path: /home/peon/bin
     state: directory
     owner: peon
     group: peon
     mode: 0755
 
-- file:
+- name: "peon: add ~/go"
+  file:
     path: /home/peon/go
     state: directory
     owner: peon
     group: peon
     mode: 0755
 
-- lineinfile:
+- name: "peon: configure GOPATH"
+  lineinfile:
     dest: /home/peon/.bashrc
     create: yes
     owner: peon

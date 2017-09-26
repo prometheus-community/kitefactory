@@ -60,11 +60,12 @@ build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}-$
 	PACKER_LOG=1 PACKER_KEY_INTERVAL=10ms packer build -on-error=ask -only=qemu -var-file=src/packer/${OS}-${VER}-${ARCH}.json src/packer/${OS}.json
 
 secrets/${OS}-${VER}-${ARCH}:
-	mkdir $@
+	mkdir -p $@
 
 secrets/${OS}-${VER}-${ARCH}/http: secrets/${OS}-${VER}-${ARCH}
-	echo mkdir $@
-	mkdir $@
+	mkdir -p $@
+
+secrets/${OS}-${VER}-${ARCH}/env: secrets/${OS}-${VER}-${ARCH}
 
 secrets/${OS}-${VER}-${ARCH}/http/installerconfig: secrets/${OS}-${VER}-${ARCH}/env src/packer/http/${OS}-${VER}-${ARCH}/installerconfig.tpl secrets/${OS}-${VER}-${ARCH}/http
 	test -n "${PROVISIONING_PASSWORD}"

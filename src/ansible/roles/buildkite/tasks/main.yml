@@ -19,7 +19,7 @@
     group: wheel
     mode: 0664
     regexp: 'buildkite-agent'
-    line: "/usr/local/bin/sudo -u peon sh -c 'tmux new -d -s buildkite-agent \"while sleep 1; do ~/.buildkite-agent/bin/buildkite-agent start; done\"'"
+    line: "/usr/local/bin/sudo -u peon sh -c 'tmux new -d -s buildkite-agent \"while sleep 1; do ~/.buildkite-agent/bin/buildkite-agent start --meta-data platform={{ lookup('env','PACKER_TEMPLATE') | regex_replace('[^a-zA-Z0-9-]', '-') }}; done\"'"
 
 - lineinfile:
     dest: /home/peon/.bashrc
