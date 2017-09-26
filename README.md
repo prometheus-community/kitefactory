@@ -1,4 +1,10 @@
-# Generating Machine Images
+# Kitefactory
+
+This is a framework to easily test Go-based applications a wide variety of
+native build targets, using the [Buildkite CI
+platform](https://buildkite.com/).  This is especially
+important when there are CGo components involved in the system.  This could be
+easily adapted to other languages as well.
 
 ## Prerequisites
 
