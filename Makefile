@@ -56,7 +56,7 @@ clean-pkgs:
 clean-isos:
 	rm -f vendor/images/*
 
-build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}-${ARCH}.json secrets/${OS}-${VER}-${ARCH}/http/installerconfig vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso vendor/packages/${OS}-${VER}-${ARCH}
+build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}-${ARCH}.json secrets/${OS}-${VER}-${ARCH}/http/installerconfig vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso vendor/packages/${OS}-${VER}-${ARCH}
 	PACKER_LOG=1 PACKER_KEY_INTERVAL=10ms packer build -on-error=ask -only=qemu -var-file=src/packer/${OS}-${VER}-${ARCH}.json src/packer/${OS}.json
 
 secrets/${OS}-${VER}-${ARCH}:
@@ -81,19 +81,22 @@ vendor/packages/${OS}-${VER}-${ARCH}: Makefile
 		xz -t "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg"; \
 	done
 
-vendor/images/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}:
-	curl -o vendor/images/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH} -OJL "https://download.${OS}.org/ftp/releases/${ARCH}/${ARCH}/ISO-IMAGES/${VER}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}"
+vendor/images/${OS}-${VER}-${ARCH}:
+	mkdir -p $@
 
-vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso: vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz vendor/images/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}
-	xz -d --stdout vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz > vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso
+vendor/images/${OS}-${VER}-${ARCH}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}: vendor/images/${OS}-${VER}-${ARCH}
+	curl -o vendor/images/${OS}-${VER}-${ARCH}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH} -OJL "https://download.${OS}.org/ftp/releases/${ARCH}/${ARCH}/ISO-IMAGES/${VER}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}"
+
+vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso: vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz vendor/images/${OS}-${VER}-${ARCH}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}
+	xz -d --stdout vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz > vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso
 	( \
-		cd vendor/images; \
+		cd vendor/images/${OS}-${VER}-${ARCH}/; \
 		grep "${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso)" CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH} | sha256sum -c - ; \
 	)
 
-vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz: vendor/images/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}
-	curl -o vendor/images/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz -OJL "https://download.${OS}.org/ftp/releases/${ARCH}/${ARCH}/ISO-IMAGES/${VER}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz"
+vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz: vendor/images/${OS}-${VER}-${ARCH}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}
+	curl -o vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz -OJL "https://download.${OS}.org/ftp/releases/${ARCH}/${ARCH}/ISO-IMAGES/${VER}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz"
 	( \
-		cd vendor/images; \
+		cd vendor/images/${OS}-${VER}-${ARCH}; \
 		grep "${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz)" CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH} | sha256sum -c - ; \
 	)
