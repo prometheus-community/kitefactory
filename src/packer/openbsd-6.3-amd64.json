@@ -1,0 +1,7 @@
+{
+	"release_number": "6.3",
+	"iso_release_number": "63",
+	"release_arch": "amd64",
+	"name": "openbsd-6.3-amd64",
+	"iso_checksum": "ee775405dd7926975befbc3fef23de8c4b5a726c3b5075e4848fcd3a2a712ea8"
+}

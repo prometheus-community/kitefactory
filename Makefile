@@ -1,6 +1,7 @@
 .POSIX:
 .SUFFIXES:
 
+
 .PHONY: freebsd-11.1-amd64
 freebsd-11.1-amd64:
 	. secrets/$@/env && $(MAKE) \
@@ -36,6 +37,21 @@ debian-9.4.0-ppc64le:
 		VER=9.4.0 \
 		image
 	
+.PHONY: openbsd-6.3-amd64
+openbsd-6.3-amd64:
+	. secrets/$@/env && $(MAKE) \
+		OS=openbsd ISO_OS=OpenBSD \
+		ARCH=amd64 \
+		VER=6.3 ISO_VER=63 \
+		image
+
+openbsd-6.3-i386:
+	. secrets/$@/env && $(MAKE) \
+		OS=openbsd ISO_OS=OpenBSD \
+		ARCH=i386 \
+		VER=6.3 ISO_VER=63 \
+		image
+
 .PHONY: image
 image: build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2
 
@@ -62,11 +78,15 @@ clean-pkgs:
 clean-isos:
 	rm -f vendor/images/*
 
+# Build Disk Images
 build/freebsd-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}-${ARCH}.json secrets/${OS}-${VER}-${ARCH}/http/installerconfig vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso vendor/packages/${OS}-${VER}-${ARCH}
 	PACKER_LOG=1 PACKER_KEY_INTERVAL=10ms packer build -on-error=ask -only=qemu -var-file=src/packer/${OS}-${VER}-${ARCH}.json src/packer/${OS}.json
 
 build/debian-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}-${ARCH}.json secrets/${OS}-${VER}-${ARCH}/http/preseed.cfg vendor/images/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ISO_ARCH}-netinst.iso
 	PACKER_LOG=1 PACKER_KEY_INTERVAL=50ms packer build -on-error=ask -only=qemu -var-file=src/packer/${OS}-${VER}-${ARCH}.json src/packer/${OS}.json
+
+build/openbsd-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}-${ARCH}.json secrets/openbsd-${VER}-${ARCH}/http/install.conf src/packer/${OS}.json vendor/images/${OS}-${VER}-${ARCH}/install${ISO_VER}.iso
+	PACKER_LOG=1 PACKER_KEY_INTERVAL=10ms packer build -on-error=ask -only=qemu -var-file=src/packer/${OS}-${VER}-${ARCH}.json src/packer/${OS}.json
 
 # Supporting intermediate files
 secrets/${OS}-${VER}-${ARCH}:
@@ -88,15 +108,15 @@ secrets/freebsd-${VER}-${ARCH}/http/installerconfig: secrets/${OS}-${VER}-${ARCH
 vendor/packages/freebsd-${VER}-${ARCH}: Makefile
 	mkdir -p vendor/packages/${OS}-${VER}-${ARCH}
 	for pkg in pkg.txz pkg.txz.sig; do \
-		[ -f "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" ] || curl -o "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" "http://pkg.${OS}.org/${ISO_OS}:11:${ARCH}/quarterly/Latest/$$pkg"; \
+		[ -f "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" ] || curl -o "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" "http://pkg.freebsd.org/${ISO_OS}:11:${ARCH}/quarterly/Latest/$$pkg"; \
 	done
 	for pkg in ${PKGS}; do \
-		[ -f "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" ] || curl -o "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" "http://pkg.${OS}.org/${ISO_OS}:11:${ARCH}/quarterly/All/$$pkg"; \
+		[ -f "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" ] || curl -o "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg" "http://pkg.freebsd.org/${ISO_OS}:11:${ARCH}/quarterly/All/$$pkg"; \
 		xz -t "vendor/packages/${OS}-${VER}-${ARCH}/$$pkg"; \
 	done
 
 vendor/images/${OS}-${VER}-${ARCH}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}: vendor/images/${OS}-${VER}-${ARCH}
-	curl -o vendor/images/${OS}-${VER}-${ARCH}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH} -OJL "https://download.${OS}.org/ftp/releases/${ARCH}/${ARCH}/ISO-IMAGES/${VER}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}"
+	curl -o vendor/images/${OS}-${VER}-${ARCH}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH} -OJL "https://download.freebsd.org/ftp/releases/${ARCH}/${ARCH}/ISO-IMAGES/${VER}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}"
 
 vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso: vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz vendor/images/${OS}-${VER}-${ARCH}/CHECKSUM.SHA256-${ISO_OS}-${VER}-RELEASE-${ARCH}
 	xz -d --stdout vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso.xz > vendor/images/${OS}-${VER}-${ARCH}/${ISO_OS}-${VER}-RELEASE-${ARCH}-disc1.iso
@@ -126,3 +146,19 @@ vendor/images/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ISO_ARCH}-netinst.iso: vendor/
 		cd vendor/images/${OS}-${VER}-${ARCH}; \
 		grep "${OS}-${VER}-${ISO_ARCH}-netinst.iso" SHA256SUMS | sha256sum -c - ; \
 	)
+
+## OpenBSD ISOs and other bits
+secrets/openbsd-${VER}-${ARCH}/http/install.conf: secrets/${OS}-${VER}-${ARCH}/env src/packer/http/${OS}-${VER}-${ARCH}/install.conf secrets/${OS}-${VER}-${ARCH}/http
+	test -n "${PROVISIONING_PASSWORD}"
+	sed "s/PROVISIONING_PASSWORD/${PROVISIONING_PASSWORD}/" src/packer/http/${OS}-${VER}-${ARCH}/install.conf > "$@"
+
+vendor/images/${OS}-${VER}-${ARCH}/SHA256: vendor/images/${OS}-${VER}-${ARCH}
+	curl -o vendor/images/${OS}-${VER}-${ARCH}/SHA256 https://openbsd.mirror.constant.com/pub/OpenBSD/${VER}/${ARCH}/SHA256
+
+vendor/images/${OS}-${VER}-${ARCH}/install${ISO_VER}.iso: vendor/images/${OS}-${VER}-${ARCH}/SHA256
+	curl -o vendor/images/${OS}-${VER}-${ARCH}/install${ISO_VER}.iso https://openbsd.mirror.constant.com/pub/OpenBSD/${VER}/${ARCH}/install${ISO_VER}.iso
+	( \
+		cd vendor/images/${OS}-${VER}-${ARCH}; \
+		grep "install${ISO_VER}.iso)" SHA256 | sha256sum -c - ; \
+	)
+

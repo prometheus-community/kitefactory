@@ -6,6 +6,9 @@ platform](https://buildkite.com/).  This is especially
 important when there are CGo components involved in the system.  This could be
 easily adapted to other languages as well.
 
+Thanks goes out to the [boxcutter folks](https://github.com/boxcutter), for
+packer templates to get started with for some of the platforms.
+
 ## Prerequisites
 
 Depends on the following being available on the path:
@@ -42,6 +45,8 @@ Run `make machine-type` where machine-type is in:
 - freebsd-11.1-amd64
 - freebsd-11.1-i386
 - debian-9.4.0-ppc64le
+- openbsd-6.3-amd64
+- openbsd-6.3-i386
 
 # Running
 

@@ -18,3 +18,13 @@
 - set_fact:
     hostname: "{{ platform }}.build.prometheus.io"
 
+# This is a common way for all platforms to bootstrap servies
+- lineinfile:
+    dest: /etc/rc.local
+    create: yes
+    owner: root
+    group: "{{ root_group }}"
+    mode: 0775
+    regexp: '^[#][!]'
+    line: '#!/bin/sh'
+    insertbefore: BOF

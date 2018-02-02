@@ -10,6 +10,12 @@
     comment: "Peon Worker"
     shell: "{{ bash_prefix }}/bin/bash"
 
+- name: Set peon login class
+  user:
+    name: peon
+    login_class: "{{ peon_class }}"
+  when: peon_class is defined
+
 - name: "peon: add ~/bin"
   file:
     path: /home/peon/bin
@@ -53,7 +59,15 @@
     regexp: '^alias make'
     state: absent
 
-- name: Configure sudo
+- name: Configure sudo 1/2
+  file:
+    path: "{{ sudoersd_path }}"
+    state: directory
+    owner: root
+    group: "{{ root_group }}"
+    mode: 0755
+
+- name: Configure sudo 2/2
   copy:
     src: sudoers.d/default
     dest: "{{ sudoersd_path }}"

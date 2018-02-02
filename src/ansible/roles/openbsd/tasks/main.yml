@@ -1,0 +1,81 @@
+---
+
+- name: Update to latest patch level
+  shell: syspatch
+
+- name: Add installurl
+  lineinfile:
+    dest: /etc/installurl
+    create: yes
+    owner: root
+    group: "{{ root_group }}"
+    mode: 664
+    regexp: '^.*$'
+    line: "https://ftp.openbsd.org/pub/OpenBSD"
+
+- name: Install or upgrade required packages
+  openbsd_pkg:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+  - python%2.7
+  - go
+  - gmake
+  - git
+  - bash
+  - curl
+  - sudo--
+  - gtar--static
+
+- name: Configure OpenBSD sudo
+  lineinfile:
+    dest: /etc/sudoers
+    create: no
+    owner: root
+    group: "{{ root_group }}"
+    mode: 0440
+    regexp: '^[#]includedir /usr/local/etc/sudoers.d$'
+    line: '#includedir /usr/local/etc/sudoers.d'
+
+- name: Set hostname 1/2 - hostname
+  shell: "hostname {{ hostname }}"
+
+- name: Set hostname 2/2 - /etc/rc.conf
+  lineinfile:
+    dest: /etc/myname
+    create: yes
+    owner: root
+    group: "{{ root_group }}"
+    mode: 0664
+    regexp: '^.*$'
+    line: "{{ hostname }}"
+
+- name: Configure interfaces
+  lineinfile:
+    dest: "/etc/hostname.{{ item }}"
+    create: yes
+    owner: root
+    group: "{{ root_group }}"
+    mode: 0640
+    regexp: '^.*$'
+    line: "dhcp"
+  with_items:
+    - em0
+    - vio0
+
+- name: Link python to python2.7
+  file:
+    state: link
+    owner: root
+    group: "{{ root_group }}"
+    src: "/usr/local/bin/python2.7"
+    dest: "/usr/local/bin/python"
+
+- name: Insert PATH to rc.local, required for buildkite PATH
+  lineinfile:
+    dest: /etc/rc.local
+    create: no
+    regexp: "^PATH="
+    line: "PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin:/usr/local/sbin:/usr/local/bin"
+    insertafter: "^[#][!]/bin/sh"
+

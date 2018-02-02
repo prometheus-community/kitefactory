@@ -4,8 +4,9 @@ awk_prefix: /usr
 sudoersd_path: /usr/local/etc/sudoers.d
 
 root_group: wheel
+peon_class: pbuild
 
 cron_path: "/bin:/usr/bin:/usr/local/bin:/home/peon/bin"
-build_fs: /usr/home
+build_fs: /home
 
 ansible_python_interpreter: "/usr/local/bin/python2.7"

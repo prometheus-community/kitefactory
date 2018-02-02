@@ -7,3 +7,4 @@
 # ansible leaves .retry files around
 **/freebsd.retry
 **/debian.retry
+**/openbsd.retry

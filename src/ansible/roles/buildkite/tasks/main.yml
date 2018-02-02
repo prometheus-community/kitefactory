@@ -11,11 +11,15 @@
   when: bash_prefix != ""
 
 - name: Install buildkite-agent
-  shell: "sudo -u peon sh -c 'export TOKEN={{ lookup('env','BUILDKITE_TOKEN') }}; curl -sL https://raw.githubusercontent.com/buildkite/agent/master/install.sh | bash'"
+  become: yes
+  become_user: peon
+  shell: "sh -c 'export TOKEN={{ lookup('env','BUILDKITE_TOKEN') }}; curl -sL https://raw.githubusercontent.com/buildkite/agent/master/install.sh | bash'"
 
 # We will get an i386 binary installed if there's no supported arch.
 # This will fail on unsupport architectures.
 - name: Check buildkite-agent executes cleanly
+  become: yes
+  become_user: peon
   command: /home/peon/.buildkite-agent/bin/buildkite-agent -v
   register: buildkite_version
   ignore_errors: True
@@ -47,19 +51,8 @@
 - name: "Restart running buildkite-agents"
   become: yes
   become_user: peon
-  command: killall buildkite-agent
+  command: "pkill '^(buildkite-agent|agent)$'"
   ignore_errors: True
-
-# This is a common way for all platforms
-- lineinfile:
-    dest: /etc/rc.local
-    create: yes
-    owner: root
-    group: "{{ root_group }}"
-    mode: 0775
-    regexp: '^[#][!]'
-    line: '#!/bin/sh'
-    insertbefore: BOF
 
 - lineinfile:
     dest: /etc/rc.local
