@@ -26,13 +26,36 @@
     group: peon
     mode: 0755
 
+- name: "peon: add ~/var"
+  file:
+    path: /home/peon/var
+    state: directory
+    owner: peon
+    group: peon
+    mode: 0755
+
 - name: "peon: configure GOPATH"
   lineinfile:
     dest: /home/peon/.bashrc
     create: yes
     owner: peon
     group: peon
-    mode: 664
+    mode: 0664
     regexp: '^export GOPATH='
     line: 'export GOPATH="$HOME/go"'
 
+- name: Configure sudo
+  copy:
+    src: sudoers.d/default
+    dest: "{{ sudoersd_path }}"
+    owner: root
+    group: wheel
+    mode: 0644
+
+- name: Copy gc-builds
+  copy:
+    src: scripts/gc-builds
+    dest: /home/peon/bin
+    owner: peon
+    group: peon
+    mode: 0755

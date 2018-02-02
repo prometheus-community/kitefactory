@@ -1,0 +1,124 @@
+#!/bin/sh
+
+FACILITY="${FACILITY:-user}"
+SCRIPT="$(basename "$0")"
+
+log() {
+	local level="$1"
+	local message="$2"
+
+	logger -p "$FACILITY.$level" -t "$SCRIPT" "$message"
+}
+
+get_capacity() {
+	local check="$1"
+
+# On FreeBSD:
+#  Filesystem 1K-blocks    Used   Avail Capacity  Mounted on
+#  z/usr/home   7401540 2925156 4476384    40%    /usr/home
+
+	# NOTE: does not deal with spaces or tabs in path name
+	df "$check" | while read fs size used avail capacity mount; do
+		if [ "$capacity" == "Capacity" ]; then
+			continue
+		fi
+
+		echo "$capacity" | sed -E "s/[%]$//g"
+		return 0
+	done
+}
+
+get_build_dir() {
+	local build_root="$(find ~peon/.buildkite-agent/builds -type d -maxdepth 1 -mindepth 1 | head -n 1)"
+	if [ -z "$build_root" ]; then
+		return 1
+	fi
+	
+	echo "${build_root}/prometheus"
+}
+
+find_targets() {
+	local build_dir="$1"
+	local builds="$(find "$build_dir" -type d -maxdepth 1 -mindepth 1 -name "node-exporter-*" | sed -E 's/.*node-exporter-([a-fA-F0-9]+)-([0-9]+)-(.*)$/\2 node-exporter-\1-\2-\3/g' | sort -n)"
+
+	local count="$(echo "$builds" | wc -l)"
+	local purge="$(( count / 4 ))"
+
+	local build=""
+
+	log "info" "Discovered $count potential targets.  Recommending purge of ${purge}."
+	if [ "$purge" -gt 0 ]; then
+		echo "$builds" | head -n "$purge" | while read _ build; do
+			if [ -d "$build_dir/$build" ]; then
+				echo "$build_dir/$build"
+			fi
+		done
+	fi
+}
+
+export_metrics() {
+	local promfile="$1"
+	local capacity="$2"
+	local purged="$3"
+
+	if [ -z "$promfile" ]; then
+		return 0
+	fi
+	
+	echo -n > "$promfile"
+
+	printf "# HELP kitefactory_gc_builds_capacity_percentage Percentage of utilization of disk capacity where builds are stored.\n" >> "$promfile"
+	printf "# TYPE kitefactory_gc_builds_capacity_percentage gauge\n" >> "$promfile"
+	printf "kitefactory_gc_builds_capacity_percentage %f\n" "$capacity" >> "$promfile"
+
+	printf "# HELP kitefactory_gc_builds_purged_count Builds that were purged by the current gc run.\n" >> "$promfile"
+	printf "# TYPE kitefactory_gc_builds_purged_count gauge\n" >> "$promfile"
+	printf "kitefactory_gc_builds_purged_count %f\n" "$purged" >> "$promfile"
+}
+
+usage() {
+	echo "$0 file-system threshold [prom-text-file]"
+	exit 1
+}
+
+main() {
+	local fs="$1"
+	if [ -z "$fs" ]; then
+		usage
+	fi
+	local threshold="$2"
+	if [ -z "$threshold" ]; then
+		usage
+	fi
+
+	local metrics="$3"
+
+	local capacity="$(get_capacity "$fs")"
+	local build_dir=""
+
+	if [ -z "$capacity" ]; then
+		log "error" "Could not determine disk capacity."
+		return 1
+	fi
+
+	log "info" "Disk capacity at $capacity percent.  Threshold at $threshold percent."
+	if [ "$capacity" -lt $threshold ]; then
+		log "info" "Capacity below threshold, skipping."
+		export_metrics "$metrics" "$capacity" "0"
+		return 0
+	fi
+	
+	build_dir="$(get_build_dir)"
+	if [ ! -d "$build_dir" ]; then
+		log "error" "Could not determine build directory: $build_dir"
+		return 1
+	fi
+
+	log "debug" "Found build directory: $build_dir, searching for targets."
+	local targets="$(find_targets "$build_dir")"
+
+	echo "$targets" | xargs -n 8  rm -rf
+	export_metrics "$metrics" "$capacity" "$(echo "$targets" | wc -l)"
+}
+
+main "$@"

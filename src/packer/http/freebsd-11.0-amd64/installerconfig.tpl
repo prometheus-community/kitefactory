@@ -7,11 +7,17 @@ export DISTRIBUTIONS='base.txz kernel.txz lib32.txz'
 
 #!/bin/sh
 echo "PROVISIONING_PASSWORD" | pw usermod root -h 0
+
 mkdir /root/pkgs
 
 sysrc ifconfig_vtnet0=dhcp
 sysrc ifconfig_em0=dhcp
+
+# Configure ssh for management by ansible
 sysrc sshd_enable=yes
-echo 'PermitRootLogin yes' > /etc/ssh/sshd_config
+echo '' >> /etc/ssh/sshd_config
+echo '# From installerconfig' >> /etc/ssh/sshd_config
+echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
+echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config
 
 shutdown -r now
