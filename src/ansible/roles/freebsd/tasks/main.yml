@@ -3,13 +3,33 @@
 - name: Update to latest patch level
   shell: freebsd-update fetch --not-running-from-cron && ( freebsd-update install || true )
 
-- name: Install required packages
+- name: Use latest pkg repository 1/2 - config directory
+  file:
+    state: directory
+    mode: 0755
+    owner: root
+    group: wheel
+    path: /usr/local/etc/pkg/repos
+
+- name: Use latest pkg repository 2/2 - install file
+  copy:
+    src: pkg/repos/FreeBSD.conf
+    dest: /usr/local/etc/pkg/repos
+    owner: root
+    group: wheel
+    mode: 0644
+
+- name: Update pkg database
+  shell: pkg update -f
+
+- name: Install or upgrade required packages
   shell: pkg install -y go gmake git-lite bash curl tmux sudo
 
 - name: Set hostname 1/2 - hostname
   shell: "hostname {{ lookup('env','PACKER_TEMPLATE') | regex_replace('[^a-zA-Z0-9-]', '-') }}.build.prometheus.io"
 
-- lineinfile:
+- name: Set hostname 2/2 - /etc/rc.conf
+  lineinfile:
     dest: /etc/rc.conf
     create: yes
     owner: root
