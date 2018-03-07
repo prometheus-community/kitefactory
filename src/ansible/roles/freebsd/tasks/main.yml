@@ -23,7 +23,7 @@
   shell: pkg update -f
 
 - name: Install or upgrade required packages
-  shell: pkg install -y go gmake git-lite bash curl tmux sudo
+  shell: pkg install -y python go gmake git-lite bash curl tmux sudo
 
 - name: Set hostname 1/2 - hostname
   shell: "hostname {{ lookup('env','PACKER_TEMPLATE') | regex_replace('[^a-zA-Z0-9-]', '-') }}.build.prometheus.io"
