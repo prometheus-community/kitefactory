@@ -60,7 +60,7 @@
 - name: Add gc-builds to cron
   cron:
     name: gc-builds
-    special_time: daily
+    special_time: hourly
     user: peon
     job: "~peon/bin/gc-builds /usr/home 75 /home/peon/var/gc_builds.prom"
 
