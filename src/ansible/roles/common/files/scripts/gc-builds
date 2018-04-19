@@ -16,12 +16,18 @@ get_capacity() {
 # On FreeBSD:
 #  Filesystem 1K-blocks    Used   Avail Capacity  Mounted on
 #  z/usr/home   7401540 2925156 4476384    40%    /usr/home
+#
+# On debian:
+#  Filesystem                  1K-blocks    Used Available Use% Mounted on
+#  /dev/mapper/packer--vg-root   9505560 1821740   7181244  21% /
 
 	# NOTE: does not deal with spaces or tabs in path name
 	df "$check" | while read fs size used avail capacity mount; do
-		if [ "$capacity" == "Capacity" ]; then
+		case "$capacity" in
+		Capacity|Use%)
 			continue
-		fi
+			;;
+		esac
 
 		echo "$capacity" | sed -E "s/[%]$//g"
 		return 0
@@ -29,7 +35,7 @@ get_capacity() {
 }
 
 get_build_dir() {
-	local build_root="$(find ~peon/.buildkite-agent/builds -type d -maxdepth 1 -mindepth 1 | head -n 1)"
+	local build_root="$(find ~peon/.buildkite-agent/builds -maxdepth 1 -mindepth 1 -type d | head -n 1)"
 	if [ -z "$build_root" ]; then
 		return 1
 	fi
@@ -39,7 +45,7 @@ get_build_dir() {
 
 find_targets() {
 	local build_dir="$1"
-	local builds="$(find "$build_dir" -type d -maxdepth 1 -mindepth 1 -name "node-exporter-*" | sed -E 's/.*node-exporter-([a-fA-F0-9]+)-([0-9]+)-(.*)$/\2 node-exporter-\1-\2-\3/g' | sort -n)"
+	local builds="$(find "$build_dir" -maxdepth 1 -mindepth 1 -type d -name "node-exporter-*" | sed -E 's/.*node-exporter-([a-fA-F0-9]+)-([0-9]+)-(.*)$/\2 node-exporter-\1-\2-\3/g' | sort -n)"
 
 	local count="$(echo "$builds" | wc -l)"
 	local purge="$(( count / 4 ))"

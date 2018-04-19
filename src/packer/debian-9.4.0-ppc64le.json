@@ -1,0 +1,9 @@
+{
+	"release_number": "9.4.0",
+	"release_arch": "ppc64el",
+	"name": "debian-9.4.0-ppc64le",
+	"qemu_binary": "qemu-system-ppc64",
+	"machine_type": "pseries",
+	"accelerator": "none",
+	"iso_checksum" : "185f67ed70ccd80de10ab378063e4935852e70496a41788f8ce554478d9eb773"
+}

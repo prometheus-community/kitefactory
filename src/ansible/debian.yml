@@ -1,0 +1,15 @@
+- hosts: default
+  gather_facts: no
+  vars:
+    golang:
+      version: "1.10"
+      arch:
+        ppc64le:
+          name: "ppc64le"
+          sha256: "a1e22e2fbcb3e551e0bf59d0f8aeb4b3f2df86714f09d2acd260c6597c43beee"
+  roles:
+    - setup
+    - debian
+    - common
+    - localGo
+    - buildkite

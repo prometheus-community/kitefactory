@@ -1,0 +1,73 @@
+{
+"variables": {
+	"provisioning_password": "{{env `PROVISIONING_PASSWORD`}}"
+},
+"builders" : [
+	{
+		"type":         "null",
+		"ssh_host":     "127.0.0.1",
+		"ssh_port": 2222,
+		"ssh_username": "root",
+		"ssh_password": "{{user `provisioning_password`}}"
+	},
+	{
+		"vm_name" : "{{user `name`}}.qcow2",
+		"type" : "qemu",
+		"accelerator" : "{{user `accelerator`}}",
+		"qemu_binary": "{{user `qemu_binary`}}",
+		"machine_type": "{{user `machine_type`}}",
+		"format" : "qcow2",
+		"disk_size" : 15360,
+		"disk_interface" : "virtio",
+		"net_device" : "virtio-net",
+		"headless" : true,
+		"output_directory" : "build/{{user `name`}}",
+		"iso_url" : "vendor/images/{{user `name`}}/debian-{{user `release_number`}}-{{user `release_arch`}}-netinst.iso",
+		"iso_checksum_type" : "sha256",
+		"iso_checksum" : "{{user `iso_checksum`}}",
+		"ssh_username" : "root",
+		"ssh_password" : "{{user `provisioning_password`}}",
+		"ssh_wait_timeout" : "1h",
+		"ssh_port" : 22,
+		"ssh_host_port_min" : 2222,
+		"ssh_host_port_max" : 2229,
+		"http_directory" : "secrets/{{user `name`}}/http",
+		"http_port_max" : 10089,
+		"http_port_min" : 10082,
+		"boot_wait": "30s",
+		"boot_command": [
+			"c<wait>",
+			"set options=\"",
+			" auto=true",
+			" url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
+			" debian-installer=en_US",
+			" locale=en_US",
+			" keymap=us",
+			" netcfg/get_hostname=packer",
+			" netcfg/get_domain=vm \"",
+			"<enter>",
+			"boot_one",
+			"<enter>",
+			"boot",
+			"<enter>",
+			"<wait10m>"
+		],
+		"shutdown_command": "echo 'packer'|sudo -S shutdown -h now"
+	}
+],
+"provisioners": [
+	{
+		"type": "shell",
+		"inline": [
+			"apt-get -y install python"
+		]
+	},
+	{
+		"type": "ansible",
+		"playbook_file": "src/ansible/debian.yml",
+		"groups": "debian",
+		"extra_arguments": [ "-vvv" ],
+		"ansible_env_vars": [ "PACKER_TEMPLATE={{user `name`}}" ]
+	}
+]
+}

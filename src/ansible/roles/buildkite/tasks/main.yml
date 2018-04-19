@@ -13,6 +13,28 @@
 - name: Install buildkite-agent
   shell: "sudo -u peon sh -c 'export TOKEN={{ lookup('env','BUILDKITE_TOKEN') }}; curl -sL https://raw.githubusercontent.com/buildkite/agent/master/install.sh | bash'"
 
+# We will get an i386 binary installed if there's no supported arch.
+# This will fail on unsupport architectures.
+- name: Check buildkite-agent executes cleanly
+  command: /home/peon/.buildkite-agent/bin/buildkite-agent -v
+  register: buildkite_version
+  ignore_errors: True
+
+# We can build from source.
+- name: "Build buildkite-agent"
+  become: yes
+  become_user: peon
+  shell: . /home/peon/.profile && go get github.com/buildkite/agent && ln -fsn "$GOPATH/bin/agent" /home/peon/.buildkite-agent/bin/buildkite-agent
+  when: buildkite_version is failed
+
+# Which gets us a version that might not be compatible with the installed config.
+- name: "Comment out bootstrap script for v3.0"
+  replace:
+    path: /home/peon/.buildkite-agent/buildkite-agent.cfg
+    regexp: '^bootstrap-script=(.*)'
+    replace: '#bootstrap-script=\1'
+  when: buildkite_version is failed
+
 - name: "Add buildkite-agent to PATH"
   lineinfile:
     dest: /home/peon/.profile

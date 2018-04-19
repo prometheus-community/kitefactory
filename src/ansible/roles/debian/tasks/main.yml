@@ -1,0 +1,60 @@
+---
+
+- name: Update to latest patch level
+  apt:
+    update_cache: yes
+    upgrade: dist
+
+- name: Install required packages
+  apt: name={{ item }} state=present
+  with_items:
+    - golang
+    - git
+    - bash
+    - psmisc
+    - curl
+    - tmux
+    - sudo
+
+- name: Configure DHCP on all relevant interfaces
+  blockinfile:
+    dest: /etc/network/interfaces
+    block: |
+      auto {{ item }}
+      allow-hotplug {{ item }}
+      iface {{ item }} inet dhcp
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item }}"
+  with_items:
+    - enp0s1
+    - enp0s2
+    - ibmveth2
+
+- name: Set hostname 1/3 - hostname
+  shell: "hostname {{ hostname }}"
+
+- name: Set hostname 2/3 - /etc/hostname
+  lineinfile:
+    dest: /etc/hostname
+    create: yes
+    owner: root
+    group: "{{ root_group }}"
+    mode: 664
+    regexp: '.*'
+    line: "{{ hostname }}"
+
+- name: Set hostname 3/3 - /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    create: yes
+    owner: root
+    group: "{{ root_group }}"
+    mode: 644
+    regexp: '^127.0.0.1 {{ hostname }}'
+    line: "127.0.0.1 {{ hostname }}"
+
+- name: Enable rc.local
+  systemd:
+    name: rc-local
+    enabled: yes
+    state: started
+    masked: no

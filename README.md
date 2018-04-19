@@ -41,6 +41,7 @@ Run `make machine-type` where machine-type is in:
 - freebsd-11.0-amd64
 - freebsd-11.1-amd64
 - freebsd-11.1-i386
+- debian-9.4.0-ppc64le
 
 # Running
 

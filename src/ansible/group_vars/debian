@@ -1,0 +1,11 @@
+local_prefix: /usr
+bash_prefix: ""
+awk_prefix: /usr
+sudoersd_path: /etc/sudoers.d
+root_group: root
+
+cron_path: "/bin:/usr/bin:/home/peon/bin"
+build_fs: /
+
+ansible_python_interpreter: "/usr/bin/python"
+
