@@ -3,28 +3,28 @@
 
 .PHONY: freebsd-11.1-amd64
 freebsd-11.1-amd64:
-	$(MAKE) \
-		OS=freebsd \
-		ISO_OS=FreeBSD VER=11.1 \
+	. secrets/$@/env && $(MAKE) \
+		OS=freebsd ISO_OS=FreeBSD \
 		ARCH=amd64 \
+		VER=11.1 \
 		PKGS="gettext-runtime-0.19.8.1_1.txz indexinfo-0.2.6.txz libffi-3.2.1.txz readline-7.0.3.txz python27-2.7.13_7.txz" \
 		image
 
 .PHONY: freebsd-11.1-i386
 freebsd-11.1-i386:
-	$(MAKE) \
-		OS=freebsd \
-		ISO_OS=FreeBSD VER=11.1 \
+	. secrets/$@/env && $(MAKE) \
+		OS=freebsd ISO_OS=FreeBSD \
 		ARCH=i386 \
+		VER=11.1 \
 		PKGS="gettext-runtime-0.19.8.1_1.txz indexinfo-0.2.6.txz libffi-3.2.1.txz readline-7.0.3.txz python27-2.7.13_7.txz" \
 		image
 
 .PHONY: freebsd-11.0-i386
 freebsd-11.0-amd64:
-	$(MAKE) \
-		OS=freebsd \
-		ISO_OS=FreeBSD VER=11.0 \
+	. secrets/$@/env && $(MAKE) \
+		OS=freebsd ISO_OS=FreeBSD \
 		ARCH=amd64 \
+		VER=11.0 \
 		PKGS="gettext-runtime-0.19.8.1_1.txz indexinfo-0.2.6.txz libffi-3.2.1.txz readline-6.3.8.txz python27-2.7.13_3.txz" \
 		image
 
@@ -33,11 +33,9 @@ image: build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2
 
 .PHONY: ${OS}-${VER}-${ARCH}-run
 ${OS}-${VER}-${ARCH}-run:
-	#qemu-system-x86_64 -drive file=build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH},if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,hostfwd=tcp::2228-:22 -boot once=d -m 512M -machine type=pc,accel=kvm -device virtio-net,netdev=user.0 -name ${OS}-${VER}-${ARCH} -display sdl -vnc 127.0.0.1:71
 	qemu-system-x86_64 \
 		-drive file=build/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
-		-netdev tap,id=user.0 \
-		-device virtio-net,netdev=user.0 \
+		-net nic -net bridge,br=br0
 		-boot once=d -m 2048M \
 		-machine type=pc,accel=kvm \
 		-name ${OS}-${VER}-${ARCH} \
