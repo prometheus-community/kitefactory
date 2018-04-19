@@ -1,7 +1,18 @@
 - hosts: default
   gather_facts: no
+  vars:
+    golang:
+      version: "1.10"
+      arch:
+        i386:
+          name: "386"
+          sha256: "d1e84cc46fa7290a6849c794785d629239f07c6f3e565616fa5421dd51344211"
+        amd64:
+          name: "amd64"
+          sha256: "d1e84cc46fa7290a6849c794785d629239f07c6f3e565616fa5421dd51344211"
   roles:
     - setup
     - freebsd
     - common
+    - localGo
     - buildkite

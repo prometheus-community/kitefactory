@@ -1,0 +1,46 @@
+---
+- name: Fetch distribution tarball
+  get_url:
+    url: "https://dl.google.com/go/go{{ golang.version }}.{{ os_type }}-{{ golang.arch[arch].name }}.tar.gz"
+    dest: /tmp/
+    checksum: "sha256:{{ golang.arch[arch].sha256 }}"
+
+- file:
+    state: directory
+    path: "/home/peon/godev/go{{ golang.version }}"
+    owner: peon
+    group: peon
+
+- name: Extract Go into peon home dir
+  unarchive:
+    src: "/tmp/go{{ golang.version }}.{{ os_type }}-{{ golang.arch[arch].name }}.tar.gz"
+    dest: "/home/peon/godev/go{{ golang.version }}"
+    copy: no
+
+- name: Link to extracted version
+  file:
+    state: link
+    owner: peon
+    group: peon
+    src: "/home/peon/godev/go{{ golang.version }}/go"
+    dest: "/home/peon/godev/go"
+
+- name: Export GOROOT
+  lineinfile:
+    dest: /home/peon/.profile
+    create: yes
+    owner: peon
+    group: peon
+    mode: 0664
+    regexp: '^export GOROOT'
+    line: 'export GOROOT="/home/peon/godev/go"'
+
+- name: GOROOT bin in path
+  lineinfile:
+    dest: /home/peon/.profile
+    create: yes
+    owner: peon
+    group: peon
+    mode: 0664
+    regexp: '^export PATH=["]?[$]GOROOT'
+    line: 'export PATH="$GOROOT/bin:$PATH"'
