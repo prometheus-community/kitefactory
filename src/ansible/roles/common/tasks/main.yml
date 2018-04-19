@@ -36,7 +36,7 @@
 
 - name: "peon: configure GOPATH"
   lineinfile:
-    dest: /home/peon/.bashrc
+    dest: /home/peon/.profile
     create: yes
     owner: peon
     group: peon
@@ -44,12 +44,21 @@
     regexp: '^export GOPATH='
     line: 'export GOPATH="$HOME/go"'
 
+- lineinfile:
+    dest: /home/peon/.bashrc
+    create: yes
+    owner: peon
+    group: peon
+    mode: 0664
+    regexp: '^alias make'
+    state: absent
+
 - name: Configure sudo
   copy:
     src: sudoers.d/default
     dest: "{{ sudoersd_path }}"
     owner: root
-    group: wheel
+    group: "{{ root_group }}"
     mode: 0644
 
 - name: Copy gc-builds
@@ -59,3 +68,18 @@
     owner: peon
     group: peon
     mode: 0755
+
+- name: Configure peon cron environment
+  cron:
+    name: PATH
+    env: yes
+    value: "{{ cron_path }}"
+    user: peon
+
+- name: Add gc-builds to cron
+  cron:
+    name: gc-builds
+    special_time: hourly
+    user: peon
+    job: "~peon/bin/gc-builds {{ build_fs }} 75 /home/peon/var/gc_builds.prom"
+

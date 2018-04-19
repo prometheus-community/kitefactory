@@ -26,41 +26,28 @@
   shell: pkg install -y python go gmake git-lite bash curl tmux sudo
 
 - name: Set hostname 1/2 - hostname
-  shell: "hostname {{ lookup('env','PACKER_TEMPLATE') | regex_replace('[^a-zA-Z0-9-]', '-') }}.build.prometheus.io"
+  shell: "hostname {{ hostname }}"
 
 - name: Set hostname 2/2 - /etc/rc.conf
   lineinfile:
     dest: /etc/rc.conf
     create: yes
     owner: root
-    group: wheel
+    group: "{{ root_group }}"
     mode: 664
     regexp: '^hostname'
-    line: "hostname=\"{{ lookup('env','PACKER_TEMPLATE') | regex_replace('[^a-zA-Z0-9-]', '-') }}.build.prometheus.io\""
+    line: "hostname=\"{{ hostname }}\""
 
 # configure bash
 - lineinfile:
     dest: /etc/fstab
     create: yes
     owner: root
-    group: wheel
+    group: "{{ root_group }}"
     mode: 664
     regexp: '^fdesc'
     line: 'fdesc /dev/fd fdescfs rw 0 0'
 
 - name: Mount fdesc filesystem
   shell: mount /dev/fd
-
-# cron is system-specific
-- cron:
-    name: PATH
-    env: yes
-    value: /bin:/usr/bin:/usr/local/bin:/home/peon/bin
-    user: peon
-- name: Add gc-builds to cron
-  cron:
-    name: gc-builds
-    special_time: hourly
-    user: peon
-    job: "~peon/bin/gc-builds /usr/home 75 /home/peon/var/gc_builds.prom"
 

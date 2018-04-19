@@ -1,32 +1,51 @@
 ---
-
+# Buildkite assumes /bin/bash
 - name: Symlink bash to /bin/bash for compatibility
   file:
     src: "{{ bash_prefix }}/bin/bash"
     dest: "/bin/bash"
     owner: root
-    group: wheel
+    group: "{{ root_group }}"
     state: link
     force: no
+  when: bash_prefix != ""
 
-- name: Install buildkite agent
+- name: Install buildkite-agent
   shell: "sudo -u peon sh -c 'export TOKEN={{ lookup('env','BUILDKITE_TOKEN') }}; curl -sL https://raw.githubusercontent.com/buildkite/agent/master/install.sh | bash'"
+
+- name: "Add buildkite-agent to PATH"
+  lineinfile:
+    dest: /home/peon/.profile
+    create: yes
+    owner: peon
+    group: peon
+    mode: 0664
+    regexp: '^export PATH=["]?[$]PATH:[$]HOME/.buildkite-agent/bin["]?'
+    line: 'export PATH="$PATH:$HOME/.buildkite-agent/bin"'
+
+- name: "Restart running buildkite-agents"
+  become: yes
+  become_user: peon
+  command: killall buildkite-agent
+  ignore_errors: True
+
+# This is a common way for all platforms
+- lineinfile:
+    dest: /etc/rc.local
+    create: yes
+    owner: root
+    group: "{{ root_group }}"
+    mode: 0775
+    regexp: '^[#][!]'
+    line: '#!/bin/sh'
+    insertbefore: BOF
 
 - lineinfile:
     dest: /etc/rc.local
     create: yes
     owner: root
-    group: wheel
-    mode: 0664
+    group: "{{ root_group }}"
+    mode: 0775
     regexp: 'buildkite-agent'
-    line: "/usr/local/bin/sudo -u peon sh -c 'tmux new -d -s buildkite-agent \"while sleep 1; do ~/.buildkite-agent/bin/buildkite-agent start --meta-data platform={{ lookup('env','PACKER_TEMPLATE') | regex_replace('[^a-zA-Z0-9-]', '-') }}; done\"'"
-
-- lineinfile:
-    dest: /home/peon/.bashrc
-    create: yes
-    owner: peon
-    group: peon
-    mode: 0664
-    regexp: '^alias make'
-    line: 'alias make=gmake'
+    line: "{{ local_prefix }}/bin/sudo -u peon sh -c 'tmux new -d -s buildkite-agent \"while sleep 1; do ~/.buildkite-agent/bin/buildkite-agent start --meta-data platform={{ platform }}; done\"'"
 

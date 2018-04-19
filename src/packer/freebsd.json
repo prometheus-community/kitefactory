@@ -15,7 +15,7 @@
 		"type" : "qemu",
 		"accelerator" : "kvm",
 		"format" : "qcow2",
-		"disk_size" : 10240,
+		"disk_size" : 15360,
 		"disk_interface" : "virtio",
 		"net_device" : "virtio-net",
 		"headless" : true,
