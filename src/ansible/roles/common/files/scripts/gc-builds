@@ -34,18 +34,13 @@ get_capacity() {
 	done
 }
 
-get_build_dir() {
-	local build_root="$(find ~peon/.buildkite-agent/builds -maxdepth 1 -mindepth 1 -type d | head -n 1)"
-	if [ -z "$build_root" ]; then
-		return 1
-	fi
-	
-	echo "${build_root}/prometheus"
+get_build_dirs() {
+	find ~peon/.buildkite-agent/builds -maxdepth 2 -mindepth 2 -type d -name prometheus
 }
 
 find_targets() {
 	local build_dir="$1"
-	local builds="$(find "$build_dir" -maxdepth 1 -mindepth 1 -type d -name "node-exporter-*" | sed -E 's/.*node-exporter-([a-fA-F0-9]+)-([0-9]+)-(.*)$/\2 node-exporter-\1-\2-\3/g' | sort -n)"
+	local builds="$(find "${build_dir}" -maxdepth 1 -mindepth 1 -type d -name "node-exporter-*" | sed -E 's/.*node-exporter-([a-fA-F0-9]+|HEAD)-([0-9]+)-(.*)$/\2 node-exporter-\1-\2-\3/g' | sort -n)"
 
 	local count="$(echo "$builds" | wc -l)"
 	local purge="$(( count / 4 ))"
@@ -97,6 +92,7 @@ main() {
 		usage
 	fi
 
+	local target_count="0"
 	local metrics="$3"
 
 	local capacity="$(get_capacity "$fs")"
@@ -107,6 +103,7 @@ main() {
 		return 1
 	fi
 
+	local total_targets=0
 	log "info" "Disk capacity at $capacity percent.  Threshold at $threshold percent."
 	if [ "$capacity" -lt $threshold ]; then
 		log "info" "Capacity below threshold, skipping."
@@ -114,17 +111,21 @@ main() {
 		return 0
 	fi
 	
-	build_dir="$(get_build_dir)"
-	if [ ! -d "$build_dir" ]; then
-		log "error" "Could not determine build directory: $build_dir"
-		return 1
-	fi
+	get_build_dirs | while read build_dir ; do
+		if [ ! -d "${build_dir}" ]; then
+			log "error" "Could not determine build directory: ${build_dir}"
+			return 1
+		fi
 
-	log "debug" "Found build directory: $build_dir, searching for targets."
-	local targets="$(find_targets "$build_dir")"
+		log "debug" "Found build directory: ${build_dir}, searching for targets."
+		local targets="$(find_targets "${build_dir}")"
+		target_count="$(echo "$targets" | wc -l)"
+		total_targets="$((total_targets + target_count))"
+		log "debug" "Found ${target_count} targets in build directory: ${build_dir}."
+		echo "${targets}" | xargs -n 8  rm -rf
+	done
 
-	echo "$targets" | xargs -n 8  rm -rf
-	export_metrics "$metrics" "$capacity" "$(echo "$targets" | wc -l)"
+	export_metrics "${metrics}" "${capacity}" "${total_targets}"
 }
 
 main "$@"
