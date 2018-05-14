@@ -12,7 +12,7 @@
   shell: pkg update -f
 
 - name: Install or upgrade required packages
-  shell: pkg install -y python go gmake git-lite bash curl tmux sudo
+  shell: pkg install -y python go gmake git-lite bash curl tmux sudo gtar
 
 - name: Set hostname 1/2 - hostname
   shell: "hostname {{ hostname }}"
