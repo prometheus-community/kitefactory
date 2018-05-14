@@ -3,21 +3,10 @@
 - name: Update to latest patch level
   shell: freebsd-update fetch --not-running-from-cron && ( freebsd-update install || true )
 
-- name: Use latest pkg repository 1/2 - config directory
+- name: Remove pkg directory
   file:
-    state: directory
-    mode: 0755
-    owner: root
-    group: wheel
-    path: /usr/local/etc/pkg/repos
-
-- name: Use latest pkg repository 2/2 - install file
-  copy:
-    src: pkg/repos/FreeBSD.conf
-    dest: /usr/local/etc/pkg/repos
-    owner: root
-    group: wheel
-    mode: 0644
+    state: absent
+    path: /usr/local/etc/pkg
 
 - name: Update pkg database
   shell: pkg update -f
