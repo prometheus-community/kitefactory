@@ -2,14 +2,14 @@
   gather_facts: no
   vars:
     golang:
-      version: "1.10"
+      version: "1.10.2"
       arch:
         i386:
           name: "386"
-          sha256: "d1e84cc46fa7290a6849c794785d629239f07c6f3e565616fa5421dd51344211"
+          sha256: "f272774839a95041cf8874171ef6a8c6692e8784544ca05abbb29c66643d24a9"
         amd64:
           name: "amd64"
-          sha256: "9ecc9dd288e9727b9ed250d5adbcf21073c038391e8d96aff46c20800be317c3"
+          sha256: "6174ff4c2da7ebb064e7f2b28419d2cd5d3f7de34bec9e42d3716bdb190c9955"
   roles:
     - setup
     - freebsd
