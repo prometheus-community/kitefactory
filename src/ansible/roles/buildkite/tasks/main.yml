@@ -33,7 +33,6 @@
     path: /home/peon/.buildkite-agent/buildkite-agent.cfg
     regexp: '^bootstrap-script=(.*)'
     replace: '#bootstrap-script=\1'
-  when: buildkite_version is failed
 
 - name: "Add buildkite-agent to PATH"
   lineinfile:
