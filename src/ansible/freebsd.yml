@@ -9,7 +9,7 @@
           sha256: "d1e84cc46fa7290a6849c794785d629239f07c6f3e565616fa5421dd51344211"
         amd64:
           name: "amd64"
-          sha256: "d1e84cc46fa7290a6849c794785d629239f07c6f3e565616fa5421dd51344211"
+          sha256: "9ecc9dd288e9727b9ed250d5adbcf21073c038391e8d96aff46c20800be317c3"
   roles:
     - setup
     - freebsd
