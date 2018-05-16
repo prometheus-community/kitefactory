@@ -3,3 +3,7 @@
 # packer seems to delete /build/.gitignore
 /build/*
 !/build/
+
+# ansible leaves .retry files around
+**/freebsd.retry
+**/debian.retry
