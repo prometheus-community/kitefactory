@@ -1,9 +1,5 @@
 ---
-- name: Fetch distribution tarball
-  get_url:
-    url: "https://dl.google.com/go/go{{ golang.version }}.{{ os_type }}-{{ golang.arch[arch].name }}.tar.gz"
-    dest: /tmp/
-    checksum: "sha256:{{ golang.arch[arch].sha256 }}"
+- set_fact: use_binary_go="{{ golang.arch is defined and golang.arch[arch] is defined and golang.arch[arch].sha256 is defined }}"
 
 - file:
     state: directory
@@ -11,11 +7,33 @@
     owner: peon
     group: peon
 
+- name: Fetch distribution tarball
+  get_url:
+    url: "https://dl.google.com/go/go{{ golang.version }}.{{ os_type }}-{{ golang.arch[arch].name }}.tar.gz"
+    dest: /tmp/
+    checksum: "sha256:{{ golang.arch[arch].sha256 }}"
+  when: use_binary_go
+
 - name: Extract Go into peon home dir
   unarchive:
     src: "/tmp/go{{ golang.version }}.{{ os_type }}-{{ golang.arch[arch].name }}.tar.gz"
     dest: "/home/peon/godev/go{{ golang.version }}"
     copy: no
+  when: use_binary_go
+
+- name: Fetch src tree
+  git:
+    repo: https://github.com/golang/go/
+    dest: "/home/peon/godev/go{{ golang.version }}/go"
+    depth: 1
+    version: "go{{ golang.version }}"
+  when: not use_binary_go
+
+- name: Build src
+  shell: ./make.bash
+  args:
+    chdir: "/home/peon/godev/go{{ golang.version }}/go/src"
+  when: not use_binary_go
 
 - name: Link to extracted version
   file:
