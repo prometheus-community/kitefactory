@@ -2,6 +2,24 @@
 .SUFFIXES:
 
 
+.PHONY: freebsd-11.2-amd64
+freebsd-11.2-amd64:
+	. secrets/$@/env && $(MAKE) \
+		OS=freebsd ISO_OS=FreeBSD \
+		ARCH=amd64 \
+		VER=11.2 \
+		PKGS="gettext-runtime-0.19.8.1_1.txz indexinfo-0.3.1.txz libffi-3.2.1_2.txz readline-7.0.3_1.txz python27-2.7.15.txz" \
+		image
+
+.PHONY: freebsd-11.2-i386
+freebsd-11.2-i386:
+	. secrets/$@/env && $(MAKE) \
+		OS=freebsd ISO_OS=FreeBSD \
+		ARCH=i386 \
+		VER=11.2 \
+		PKGS="gettext-runtime-0.19.8.1_1.txz indexinfo-0.3.1.txz libffi-3.2.1_2.txz readline-7.0.3_1.txz python27-2.7.15.txz" \
+		image
+
 .PHONY: freebsd-11.1-amd64
 freebsd-11.1-amd64:
 	. secrets/$@/env && $(MAKE) \
