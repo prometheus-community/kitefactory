@@ -8,6 +8,8 @@
     group: peon
 
 - name: Fetch distribution tarball
+  become: yes
+  become_user: peon
   get_url:
     url: "https://dl.google.com/go/go{{ golang.version }}.{{ os_type }}-{{ golang.arch[arch].name }}.tar.gz"
     dest: /tmp/
@@ -15,6 +17,8 @@
   when: use_binary_go
 
 - name: Extract Go into peon home dir
+  become: yes
+  become_user: peon
   unarchive:
     src: "/tmp/go{{ golang.version }}.{{ os_type }}-{{ golang.arch[arch].name }}.tar.gz"
     dest: "/home/peon/godev/go{{ golang.version }}"
@@ -22,6 +26,8 @@
   when: use_binary_go
 
 - name: Fetch src tree
+  become: yes
+  become_user: peon
   git:
     repo: https://github.com/golang/go/
     dest: "/home/peon/godev/go{{ golang.version }}/go"
@@ -30,6 +36,8 @@
   when: not use_binary_go
 
 - name: Build src
+  become: yes
+  become_user: peon
   shell: ./make.bash
   args:
     chdir: "/home/peon/godev/go{{ golang.version }}/go/src"

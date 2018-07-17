@@ -40,7 +40,10 @@
 			"ftp -o install.conf http://{{ .HTTPIP }}:{{ .HTTPPort }}/install.conf && install -af install.conf && ",
 			"echo \"permit nopass keepenv :wheel\" > /mnt/etc/doas.conf && reboot<enter>"
 		],
-		"shutdown_command": "doas shutdown -p now"
+		"shutdown_command": "doas shutdown -p now",
+		"qemuargs": [
+			["-m", "2G"]
+		]
 	}
 ],
 "provisioners": [
