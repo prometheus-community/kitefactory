@@ -103,7 +103,7 @@ build/freebsd-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}
 build/debian-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}-${ARCH}.json secrets/${OS}-${VER}-${ARCH}/http/preseed.cfg vendor/images/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ISO_ARCH}-netinst.iso
 	PACKER_LOG=1 PACKER_KEY_INTERVAL=50ms packer build -on-error=ask -only=qemu -var-file=src/packer/${OS}-${VER}-${ARCH}.json src/packer/${OS}.json
 
-build/openbsd-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}-${ARCH}.json secrets/openbsd-${VER}-${ARCH}/http/install.conf src/packer/${OS}.json vendor/images/${OS}-${VER}-${ARCH}/install${ISO_VER}.iso
+build/openbsd-${VER}-${ARCH}/${OS}-${VER}-${ARCH}.qcow2: src/packer/${OS}-${VER}-${ARCH}.json secrets/openbsd-${VER}-${ARCH}/http/install.conf secrets/openbsd-${VER}-${ARCH}/http/disklabel src/packer/${OS}.json vendor/images/${OS}-${VER}-${ARCH}/install${ISO_VER}.iso
 	PACKER_LOG=1 PACKER_KEY_INTERVAL=10ms packer build -on-error=ask -only=qemu -var-file=src/packer/${OS}-${VER}-${ARCH}.json src/packer/${OS}.json
 
 # Supporting intermediate files
@@ -169,6 +169,9 @@ vendor/images/${OS}-${VER}-${ARCH}/${OS}-${VER}-${ISO_ARCH}-netinst.iso: vendor/
 secrets/openbsd-${VER}-${ARCH}/http/install.conf: secrets/${OS}-${VER}-${ARCH}/env src/packer/http/${OS}-${VER}-${ARCH}/install.conf secrets/${OS}-${VER}-${ARCH}/http
 	test -n "${PROVISIONING_PASSWORD}"
 	sed "s/PROVISIONING_PASSWORD/${PROVISIONING_PASSWORD}/" src/packer/http/${OS}-${VER}-${ARCH}/install.conf > "$@"
+
+secrets/openbsd-${VER}-${ARCH}/http/disklabel: src/packer/http/${OS}-${VER}-${ARCH}/disklabel
+	cp src/packer/http/${OS}-${VER}-${ARCH}/disklabel "$@"
 
 vendor/images/${OS}-${VER}-${ARCH}/SHA256: vendor/images/${OS}-${VER}-${ARCH}
 	curl -o vendor/images/${OS}-${VER}-${ARCH}/SHA256 https://openbsd.mirror.constant.com/pub/OpenBSD/${VER}/${ARCH}/SHA256
