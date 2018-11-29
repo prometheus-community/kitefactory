@@ -2,7 +2,7 @@
   gather_facts: no
   vars:
     golang:
-      version: "1.10.3"
+      version: "1.11.2"
   roles:
     - setup
     - openbsd
