@@ -2,11 +2,11 @@
   gather_facts: no
   vars:
     golang:
-      version: "1.11.2"
+      version: "1.12.1"
       arch:
         ppc64le:
           name: "ppc64le"
-          sha256: "23291935a299fdfde4b6a988ce3faa0c7a498aab6d56bbafbf1e7476468529a3"
+          sha256: "e1258c81f420c88339abf40888423904c0023497b4e9bbffac9ee484597a57d3"
   roles:
     - setup
     - debian
