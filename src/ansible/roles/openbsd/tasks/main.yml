@@ -1,5 +1,8 @@
 ---
 
+- name: Ensure syspatch doesn't fail on X
+  shell: mkdir -p /usr/X11R6/bin
+
 - name: Update to latest patch level
   shell: syspatch
 
