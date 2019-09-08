@@ -1,17 +1,4 @@
 ---
-- name: Determine os type
-  shell: uname
-  register: os_type
-
-- name: Determine arch
-  shell: uname -m
-  register: arch
-
-- name: Normalize to Go names
-  set_fact:
-    os_type: "{{ os_type.stdout|lower }}"
-    arch: "{{ arch.stdout|lower }}"
-
 - set_fact:
     platform: "{{ lookup('env','PACKER_TEMPLATE') | regex_replace('[^a-zA-Z0-9-]', '-') }}"
 

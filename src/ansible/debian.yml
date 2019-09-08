@@ -1,12 +1,5 @@
 - hosts: default
   gather_facts: no
-  vars:
-    golang:
-      version: "1.12.1"
-      arch:
-        ppc64le:
-          name: "ppc64le"
-          sha256: "e1258c81f420c88339abf40888423904c0023497b4e9bbffac9ee484597a57d3"
   roles:
     - setup
     - debian
