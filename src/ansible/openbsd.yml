@@ -1,8 +1,5 @@
 - hosts: default
   gather_facts: no
-  vars:
-    golang:
-      version: "1.12.1"
   roles:
     - setup
     - openbsd

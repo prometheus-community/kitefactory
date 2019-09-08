@@ -1,9 +1,10 @@
 ---
-- set_fact: use_binary_go="{{ golang.arch is defined and golang.arch[arch] is defined and golang.arch[arch].sha256 is defined }}"
+- set_fact:
+    go_use_binary: "{{ go_checksums[go_os] is defined and go_checksums[go_os][go_arch] is defined }}"
 
 - file:
     state: directory
-    path: "/home/peon/godev/go{{ golang.version }}"
+    path: "/home/peon/godev/go{{ go_version }}"
     owner: peon
     group: peon
 
@@ -11,44 +12,44 @@
   become: yes
   become_user: peon
   get_url:
-    url: "https://dl.google.com/go/go{{ golang.version }}.{{ os_type }}-{{ golang.arch[arch].name }}.tar.gz"
+    url: "https://dl.google.com/go/go{{ go_version }}.{{ go_os }}-{{ go_arch }}.tar.gz"
     dest: /tmp/
-    checksum: "sha256:{{ golang.arch[arch].sha256 }}"
-  when: use_binary_go
+    checksum: "sha256:{{ go_checksums[go_os][go_arch] }}"
+  when: go_use_binary
 
 - name: Extract Go into peon home dir
   become: yes
   become_user: peon
   unarchive:
-    src: "/tmp/go{{ golang.version }}.{{ os_type }}-{{ golang.arch[arch].name }}.tar.gz"
-    dest: "/home/peon/godev/go{{ golang.version }}"
+    src: "/tmp/go{{ go_version }}.{{ go_os }}-{{ go_arch }}.tar.gz"
+    dest: "/home/peon/godev/go{{ go_version }}"
     copy: no
-  when: use_binary_go
+  when: go_use_binary
 
 - name: Fetch src tree
   become: yes
   become_user: peon
   git:
     repo: https://github.com/golang/go/
-    dest: "/home/peon/godev/go{{ golang.version }}/go"
+    dest: "/home/peon/godev/go{{ go_version }}/go"
     depth: 1
-    version: "go{{ golang.version }}"
-  when: not use_binary_go
+    version: "go{{ go_version }}"
+  when: not go_use_binary
 
 - name: Build src
   become: yes
   become_user: peon
   shell: ./make.bash
   args:
-    chdir: "/home/peon/godev/go{{ golang.version }}/go/src"
-  when: not use_binary_go
+    chdir: "/home/peon/godev/go{{ go_version }}/go/src"
+  when: not go_use_binary
 
 - name: Link to extracted version
   file:
     state: link
     owner: peon
     group: peon
-    src: "/home/peon/godev/go{{ golang.version }}/go"
+    src: "/home/peon/godev/go{{ go_version }}/go"
     dest: "/home/peon/godev/go"
 
 - name: Export GOROOT
