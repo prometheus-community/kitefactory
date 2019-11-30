@@ -1,7 +1,7 @@
 ---
 
 - name: Update to latest patch level
-  shell: freebsd-update fetch --not-running-from-cron && ( freebsd-update install || true )
+  shell: freebsd-update fetch --not-running-from-cron || freebsd-update install || true
 
 - name: Remove pkg directory
   file:
@@ -9,7 +9,7 @@
     path: /usr/local/etc/pkg
 
 - name: Update pkg database
-  shell: pkg update -f
+  shell: IGNORE_OSVERSION=yes pkg update -f
 
 - name: Install or upgrade required packages
   shell: pkg install -y python go gmake git-lite bash curl tmux sudo gtar
