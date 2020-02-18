@@ -122,7 +122,8 @@ main() {
 		target_count="$(echo "$targets" | wc -l)"
 		total_targets="$((total_targets + target_count))"
 		log "debug" "Found ${target_count} targets in build directory: ${build_dir}."
-		echo "${targets}" | xargs -n 8  rm -rf
+		echo "${targets}" | xargs -n 8 chmod -R u+w
+		echo "${targets}" | xargs -n 8 rm -rf
 	done
 
 	export_metrics "${metrics}" "${capacity}" "${total_targets}"
