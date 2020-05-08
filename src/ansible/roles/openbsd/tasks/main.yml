@@ -1,7 +1,12 @@
 ---
 
 - name: Ensure syspatch doesn't fail on X
-  shell: mkdir -p /usr/X11R6/bin
+  file:
+    path: /usr/X11R6/bin
+    state: directory
+    mode: '0755'
+    owner: root
+    group: wheel
 
 - name: Update to latest patch level
   shell: syspatch
@@ -18,17 +23,16 @@
 
 - name: Install or upgrade required packages
   openbsd_pkg:
-    name: "{{ item }}"
+    name:
+      - 'python%2.7'
+      - 'go'
+      - 'gmake'
+      - 'git'
+      - 'bash'
+      - 'curl'
+      - 'sudo--'
+      - 'gtar--static'
     state: latest
-  with_items:
-  - python%2.7
-  - go
-  - gmake
-  - git
-  - bash
-  - curl
-  - sudo--
-  - gtar--static
 
 - name: Configure OpenBSD sudo
   lineinfile:
