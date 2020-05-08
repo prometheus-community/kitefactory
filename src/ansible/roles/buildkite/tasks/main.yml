@@ -28,7 +28,7 @@
 - name: "Build buildkite-agent"
   become: yes
   become_user: peon
-  shell: . /home/peon/.profile && go get -u github.com/buildkite/agent && ln -fsn "$GOPATH/bin/agent" /home/peon/.buildkite-agent/bin/buildkite-agent
+  shell: . /home/peon/.profile && go get -u github.com/buildkite/agent/agent && ln -fsn "$GOPATH/bin/agent" /home/peon/.buildkite-agent/bin/buildkite-agent
   when: buildkite_version is failed
 
 # Which gets us a version that might not be compatible with the installed config.
